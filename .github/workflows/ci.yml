@@ -136,23 +136,6 @@ jobs:
           DATABASE_PASSWORD: postgres
         run: swift test
 
-  # Windows support disabled - container operations not supported on Windows runners
-  # Windows runners do not support Docker services which are required for PostgreSQL
-  # The tests require a PostgreSQL database to run
-  #
-  # windows:
-  #   name: Windows (Swift 6.2)
-  #   runs-on: windows-latest
-  #   steps:
-  #     - uses: actions/checkout@v5
-  #     - uses: SwiftyLab/setup-swift@latest
-  #       with:
-  #         swift-version: "6.2"
-  #     - name: Build
-  #       run: swift build
-  #     - name: Run tests
-  #       run: swift test
-
   readme-validation:
     name: README Code Examples
     runs-on: macos-26
