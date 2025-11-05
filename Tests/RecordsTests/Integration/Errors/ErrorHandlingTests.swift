@@ -5,487 +5,487 @@ import RecordsTestSupport
 import Testing
 
 @Suite(
-  "Error Handling Tests",
-  .dependencies {
-    $0.envVars = .development
-    $0.defaultDatabase = Database.TestDatabase.withReminderData()
-  }
+    "Error Handling Tests",
+    .dependencies {
+        $0.envVars = .development
+        $0.defaultDatabase = Database.TestDatabase.withReminderData()
+    }
 )
 struct ErrorHandlingTests {
-  @Dependency(\.defaultDatabase) var db
-  @Dependency(\.defaultDatabase) var database
+    @Dependency(\.defaultDatabase) var db
+    @Dependency(\.defaultDatabase) var database
 
-  // MARK: - Constraint Violations
+    // MARK: - Constraint Violations
 
-  @Test("NOT NULL constraint violation")
-  func testNotNullConstraintViolation() async throws {
-    await #expect(throws: (any Error).self) {
-      try await db.write { db in
-        try await db.execute(
-          """
-          INSERT INTO "reminders" ("remindersListID", "title", "isCompleted")
-          VALUES (NULL, 'Test', false)
-          """
-        )
-      }
-    }
-  }
-
-  @Test("Foreign key constraint violation")
-  func testForeignKeyConstraintViolation() async throws {
-    await #expect(throws: (any Error).self) {
-      try await db.write { db in
-        try await Reminder.insert {
-          Reminder.Draft(
-            remindersListID: 999999,  // Non-existent list
-            title: "Invalid foreign key"
-          )
-        }.execute(db)
-      }
-    }
-  }
-
-  @Test("Unique constraint violation")
-  func testUniqueConstraintViolation() async throws {
-    // Create temporary table with unique constraint
-    try await db.write { db in
-      try await db.execute(
-        """
-        CREATE TEMPORARY TABLE unique_test (
-            id SERIAL PRIMARY KEY,
-            email TEXT UNIQUE NOT NULL
-        )
-        """
-      )
-
-      // Insert first record
-      try await db.execute(
-        """
-        INSERT INTO unique_test (email) VALUES ('test@example.com')
-        """
-      )
+    @Test("NOT NULL constraint violation")
+    func testNotNullConstraintViolation() async throws {
+        await #expect(throws: (any Error).self) {
+            try await db.write { db in
+                try await db.execute(
+                    """
+                    INSERT INTO "reminders" ("remindersListID", "title", "isCompleted")
+                    VALUES (NULL, 'Test', false)
+                    """
+                )
+            }
+        }
     }
 
-    // Try to insert duplicate - should fail
-    await #expect(throws: (any Error).self) {
-      try await db.write { db in
-        try await db.execute(
-          """
-          INSERT INTO unique_test (email) VALUES ('test@example.com')
-          """
-        )
-      }
+    @Test("Foreign key constraint violation")
+    func testForeignKeyConstraintViolation() async throws {
+        await #expect(throws: (any Error).self) {
+            try await db.write { db in
+                try await Reminder.insert {
+                    Reminder.Draft(
+                        remindersListID: 999999,  // Non-existent list
+                        title: "Invalid foreign key"
+                    )
+                }.execute(db)
+            }
+        }
     }
 
-    // Cleanup
-    try await db.write { db in
-      try await db.execute("DROP TABLE IF EXISTS unique_test")
-    }
-  }
+    @Test("Unique constraint violation")
+    func testUniqueConstraintViolation() async throws {
+        // Create temporary table with unique constraint
+        try await db.write { db in
+            try await db.execute(
+                """
+                CREATE TEMPORARY TABLE unique_test (
+                    id SERIAL PRIMARY KEY,
+                    email TEXT UNIQUE NOT NULL
+                )
+                """
+            )
 
-  @Test("Check constraint violation")
-  func testCheckConstraintViolation() async throws {
-    // Create temporary table with check constraint
-    try await db.write { db in
-      try await db.execute(
-        """
-        CREATE TEMPORARY TABLE check_test (
-            id SERIAL PRIMARY KEY,
-            age INT CHECK (age >= 0 AND age <= 150)
-        )
-        """
-      )
-    }
+            // Insert first record
+            try await db.execute(
+                """
+                INSERT INTO unique_test (email) VALUES ('test@example.com')
+                """
+            )
+        }
 
-    // Try to insert invalid age - should fail
-    await #expect(throws: (any Error).self) {
-      try await db.write { db in
-        try await db.execute(
-          """
-          INSERT INTO check_test (age) VALUES (-1)
-          """
-        )
-      }
-    }
+        // Try to insert duplicate - should fail
+        await #expect(throws: (any Error).self) {
+            try await db.write { db in
+                try await db.execute(
+                    """
+                    INSERT INTO unique_test (email) VALUES ('test@example.com')
+                    """
+                )
+            }
+        }
 
-    await #expect(throws: (any Error).self) {
-      try await db.write { db in
-        try await db.execute(
-          """
-          INSERT INTO check_test (age) VALUES (200)
-          """
-        )
-      }
+        // Cleanup
+        try await db.write { db in
+            try await db.execute("DROP TABLE IF EXISTS unique_test")
+        }
     }
 
-    // Cleanup
-    try await db.write { db in
-      try await db.execute("DROP TABLE IF EXISTS check_test")
-    }
-  }
+    @Test("Check constraint violation")
+    func testCheckConstraintViolation() async throws {
+        // Create temporary table with check constraint
+        try await db.write { db in
+            try await db.execute(
+                """
+                CREATE TEMPORARY TABLE check_test (
+                    id SERIAL PRIMARY KEY,
+                    age INT CHECK (age >= 0 AND age <= 150)
+                )
+                """
+            )
+        }
 
-  // MARK: - Type Mismatches
+        // Try to insert invalid age - should fail
+        await #expect(throws: (any Error).self) {
+            try await db.write { db in
+                try await db.execute(
+                    """
+                    INSERT INTO check_test (age) VALUES (-1)
+                    """
+                )
+            }
+        }
 
-  @Test("Type mismatch - text as integer")
-  func testTypeMismatchTextAsInteger() async throws {
-    await #expect(throws: (any Error).self) {
-      try await db.write { db in
-        try await db.execute(
-          """
-          INSERT INTO "reminders" ("remindersListID", "title", "isCompleted")
-          VALUES ('not_a_number', 'Test', false)
-          """
-        )
-      }
-    }
-  }
+        await #expect(throws: (any Error).self) {
+            try await db.write { db in
+                try await db.execute(
+                    """
+                    INSERT INTO check_test (age) VALUES (200)
+                    """
+                )
+            }
+        }
 
-  @Test("Type mismatch - invalid date format")
-  func testTypeMismatchInvalidDate() async throws {
-    await #expect(throws: (any Error).self) {
-      try await db.write { db in
-        try await db.execute(
-          """
-          INSERT INTO "reminders" ("remindersListID", "title", "isCompleted", "dueDate")
-          VALUES (1, 'Test', false, 'not-a-date')
-          """
-        )
-      }
-    }
-  }
-
-  // MARK: - Syntax Errors
-
-  @Test("SQL syntax error")
-  func testSQLSyntaxError() async throws {
-    await #expect(throws: (any Error).self) {
-      try await db.read { db in
-        try await db.execute("INVALID SQL SYNTAX")
-      }
-    }
-  }
-
-  @Test("Non-existent table")
-  func testNonExistentTable() async throws {
-    await #expect(throws: (any Error).self) {
-      try await db.read { db in
-        try await db.execute("SELECT * FROM nonexistent_table")
-      }
-    }
-  }
-
-  @Test("Non-existent column")
-  func testNonExistentColumn() async throws {
-    await #expect(throws: (any Error).self) {
-      try await db.read { db in
-        try await db.execute("SELECT nonexistent_column FROM reminders")
-      }
-    }
-  }
-
-  // MARK: - Transaction Errors
-
-  @Test("Transaction rollback on error")
-  func testTransactionRollbackOnError() async throws {
-    // Count reminders before transaction
-    let countBefore = try await db.read { db in
-      try await Reminder.fetchAll(db).count
+        // Cleanup
+        try await db.write { db in
+            try await db.execute("DROP TABLE IF EXISTS check_test")
+        }
     }
 
-    // Try transaction that should fail
-    do {
-      try await db.withTransaction { db in
-        // Insert a reminder (should succeed)
-        try await Reminder.insert {
-          Reminder.Draft(
-            remindersListID: 1,
-            title: "Should be rolled back"
-          )
-        }.execute(db)
+    // MARK: - Type Mismatches
 
-        // Try to insert invalid data (should fail)
-        try await db.execute(
-          """
-          INSERT INTO "reminders" ("remindersListID", "title")
-          VALUES (NULL, 'Invalid')
-          """
-        )
-      }
-    } catch {
-      // Expected to fail
+    @Test("Type mismatch - text as integer")
+    func testTypeMismatchTextAsInteger() async throws {
+        await #expect(throws: (any Error).self) {
+            try await db.write { db in
+                try await db.execute(
+                    """
+                    INSERT INTO "reminders" ("remindersListID", "title", "isCompleted")
+                    VALUES ('not_a_number', 'Test', false)
+                    """
+                )
+            }
+        }
     }
 
-    // Count reminders after failed transaction
-    let countAfter = try await db.read { db in
-      try await Reminder.fetchAll(db).count
+    @Test("Type mismatch - invalid date format")
+    func testTypeMismatchInvalidDate() async throws {
+        await #expect(throws: (any Error).self) {
+            try await db.write { db in
+                try await db.execute(
+                    """
+                    INSERT INTO "reminders" ("remindersListID", "title", "isCompleted", "dueDate")
+                    VALUES (1, 'Test', false, 'not-a-date')
+                    """
+                )
+            }
+        }
     }
 
-    // Should be same count (rollback occurred)
-    #expect(countBefore == countAfter)
-  }
+    // MARK: - Syntax Errors
 
-  @Test("Nested transaction error handling with savepoints")
-  func testNestedTransactionError() async throws {
-    // Note: PostgreSQL uses savepoints for nested transactions
-    let countBefore = try await db.read { db in
-      try await Reminder.fetchAll(db).count
+    @Test("SQL syntax error")
+    func testSQLSyntaxError() async throws {
+        await #expect(throws: (any Error).self) {
+            try await db.read { db in
+                try await db.execute("INVALID SQL SYNTAX")
+            }
+        }
     }
 
-    try await database.withTransaction { db in
-      // Outer transaction - insert should succeed
-      try await Reminder.insert {
-        Reminder.Draft(
-          remindersListID: 1,
-          title: "Outer transaction"
-        )
-      }.execute(db)
-
-      // Inner savepoint - should fail and rollback
-      try await db.execute("SAVEPOINT inner_savepoint")
-      do {
-        try await Reminder.insert {
-          Reminder.Draft(
-            remindersListID: 999999,  // Invalid foreign key
-            title: "Inner transaction"
-          )
-        }.execute(db)
-        // If we get here, release the savepoint
-        try await db.execute("RELEASE SAVEPOINT inner_savepoint")
-      } catch {
-        // Expected to fail - rollback to savepoint
-        try await db.execute("ROLLBACK TO SAVEPOINT inner_savepoint")
-      }
-
-      // Outer transaction should still be valid
-      // Verify the outer insert is still there
-      let count = try await Reminder.where { $0.title == "Outer transaction" }
-        .fetchCount(db)
-      #expect(count == 1)
-
-      // Cleanup the outer insert
-      try await Reminder.where { $0.title == "Outer transaction" }
-        .delete()
-        .execute(db)
+    @Test("Non-existent table")
+    func testNonExistentTable() async throws {
+        await #expect(throws: (any Error).self) {
+            try await db.read { db in
+                try await db.execute("SELECT * FROM nonexistent_table")
+            }
+        }
     }
 
-    let countAfter = try await db.read { db in
-      try await Reminder.fetchAll(db).count
+    @Test("Non-existent column")
+    func testNonExistentColumn() async throws {
+        await #expect(throws: (any Error).self) {
+            try await db.read { db in
+                try await db.execute("SELECT nonexistent_column FROM reminders")
+            }
+        }
     }
 
-    #expect(countBefore == countAfter)
-  }
+    // MARK: - Transaction Errors
 
-  // MARK: - Connection Errors
+    @Test("Transaction rollback on error")
+    func testTransactionRollbackOnError() async throws {
+        // Count reminders before transaction
+        let countBefore = try await db.read { db in
+            try await Reminder.fetchAll(db).count
+        }
 
-  @Test("Query on closed connection", .disabled("Requires manual connection management"))
-  func testQueryOnClosedConnection() async throws {
-    // This would require creating a connection, closing it, then trying to use it
-    // Not easily testable with current Database abstraction
-  }
+        // Try transaction that should fail
+        do {
+            try await db.withTransaction { db in
+                // Insert a reminder (should succeed)
+                try await Reminder.insert {
+                    Reminder.Draft(
+                        remindersListID: 1,
+                        title: "Should be rolled back"
+                    )
+                }.execute(db)
 
-  // MARK: - Data Integrity
+                // Try to insert invalid data (should fail)
+                try await db.execute(
+                    """
+                    INSERT INTO "reminders" ("remindersListID", "title")
+                    VALUES (NULL, 'Invalid')
+                    """
+                )
+            }
+        } catch {
+            // Expected to fail
+        }
 
-  @Test("NULL value in non-nullable column decoded")
-  func testNullValueInNonNullableColumn() async throws {
-    // Insert a reminder with required field
-    let inserted = try await db.write { db in
-      try await Reminder.insert {
-        Reminder.Draft(
-          remindersListID: 1,
-          title: "Test"
-        )
-      }
-      .returning(\.self)
-      .fetchAll(db)
+        // Count reminders after failed transaction
+        let countAfter = try await db.read { db in
+            try await Reminder.fetchAll(db).count
+        }
+
+        // Should be same count (rollback occurred)
+        #expect(countBefore == countAfter)
     }
 
-    guard let insertedId = inserted.first?.id else {
-      Issue.record("Failed to insert reminder")
-      return
+    @Test("Nested transaction error handling with savepoints")
+    func testNestedTransactionError() async throws {
+        // Note: PostgreSQL uses savepoints for nested transactions
+        let countBefore = try await db.read { db in
+            try await Reminder.fetchAll(db).count
+        }
+
+        try await database.withTransaction { db in
+            // Outer transaction - insert should succeed
+            try await Reminder.insert {
+                Reminder.Draft(
+                    remindersListID: 1,
+                    title: "Outer transaction"
+                )
+            }.execute(db)
+
+            // Inner savepoint - should fail and rollback
+            try await db.execute("SAVEPOINT inner_savepoint")
+            do {
+                try await Reminder.insert {
+                    Reminder.Draft(
+                        remindersListID: 999999,  // Invalid foreign key
+                        title: "Inner transaction"
+                    )
+                }.execute(db)
+                // If we get here, release the savepoint
+                try await db.execute("RELEASE SAVEPOINT inner_savepoint")
+            } catch {
+                // Expected to fail - rollback to savepoint
+                try await db.execute("ROLLBACK TO SAVEPOINT inner_savepoint")
+            }
+
+            // Outer transaction should still be valid
+            // Verify the outer insert is still there
+            let count = try await Reminder.where { $0.title == "Outer transaction" }
+                .fetchCount(db)
+            #expect(count == 1)
+
+            // Cleanup the outer insert
+            try await Reminder.where { $0.title == "Outer transaction" }
+                .delete()
+                .execute(db)
+        }
+
+        let countAfter = try await db.read { db in
+            try await Reminder.fetchAll(db).count
+        }
+
+        #expect(countBefore == countAfter)
     }
 
-    // Try to manually set title to NULL (bypassing type safety)
-    await #expect(throws: (any Error).self) {
-      try await db.write { db in
-        try await db.execute(
-          """
-          UPDATE "reminders" SET "title" = NULL WHERE "id" = \(insertedId)
-          """
-        )
-      }
+    // MARK: - Connection Errors
+
+    @Test("Query on closed connection", .disabled("Requires manual connection management"))
+    func testQueryOnClosedConnection() async throws {
+        // This would require creating a connection, closing it, then trying to use it
+        // Not easily testable with current Database abstraction
     }
 
-    // Cleanup
-    try await db.write { db in
-      try await Reminder.find(insertedId).delete().execute(db)
-    }
-  }
+    // MARK: - Data Integrity
 
-  // MARK: - Error Message Validation
+    @Test("NULL value in non-nullable column decoded")
+    func testNullValueInNonNullableColumn() async throws {
+        // Insert a reminder with required field
+        let inserted = try await db.write { db in
+            try await Reminder.insert {
+                Reminder.Draft(
+                    remindersListID: 1,
+                    title: "Test"
+                )
+            }
+            .returning(\.self)
+            .fetchAll(db)
+        }
 
-  @Test("NOT NULL constraint error is thrown")
-  func testErrorMessageContainsConstraintInfo() async throws {
-    do {
-      try await db.write { db in
-        try await db.execute(
-          """
-          INSERT INTO "reminders" ("remindersListID", "title", "isCompleted")
-          VALUES (NULL, 'Test', false)
-          """
-        )
-      }
-      Issue.record("Should have thrown an error")
-    } catch {
-      // Just verify an error was thrown
-      // Don't check specific message text as it varies by PostgreSQL version
-      let message = "\(error)"
-      #expect(!message.isEmpty)
-    }
-  }
+        guard let insertedId = inserted.first?.id else {
+            Issue.record("Failed to insert reminder")
+            return
+        }
 
-  @Test("Foreign key constraint error is thrown")
-  func testForeignKeyErrorMessage() async throws {
-    do {
-      try await db.write { db in
-        try await Reminder.insert {
-          Reminder.Draft(
-            remindersListID: 999999,
-            title: "Test"
-          )
-        }.execute(db)
-      }
-      Issue.record("Should have thrown an error")
-    } catch {
-      // Just verify an error was thrown
-      // Don't check specific message text as it varies by PostgreSQL version
-      let message = "\(error)"
-      #expect(!message.isEmpty)
-    }
-  }
+        // Try to manually set title to NULL (bypassing type safety)
+        await #expect(throws: (any Error).self) {
+            try await db.write { db in
+                try await db.execute(
+                    """
+                    UPDATE "reminders" SET "title" = NULL WHERE "id" = \(insertedId)
+                    """
+                )
+            }
+        }
 
-  // MARK: - Edge Cases
-
-  @Test("Empty string vs NULL")
-  func testEmptyStringVsNull() async throws {
-    // Insert with empty string
-    let inserted1 = try await db.write { db in
-      try await Reminder.insert {
-        Reminder.Draft(
-          notes: "",
-          remindersListID: 1,
-          title: "Empty notes"
-        )
-      }
-      .returning(\.self)
-      .fetchAll(db)
+        // Cleanup
+        try await db.write { db in
+            try await Reminder.find(insertedId).delete().execute(db)
+        }
     }
 
-    // Insert with NULL (omit notes field for nil)
-    let inserted2 = try await db.write { db in
-      try await Reminder.insert {
-        Reminder.Draft(
-          remindersListID: 1,
-          title: "Null notes"
-        )
-      }
-      .returning(\.self)
-      .fetchAll(db)
+    // MARK: - Error Message Validation
+
+    @Test("NOT NULL constraint error is thrown")
+    func testErrorMessageContainsConstraintInfo() async throws {
+        do {
+            try await db.write { db in
+                try await db.execute(
+                    """
+                    INSERT INTO "reminders" ("remindersListID", "title", "isCompleted")
+                    VALUES (NULL, 'Test', false)
+                    """
+                )
+            }
+            Issue.record("Should have thrown an error")
+        } catch {
+            // Just verify an error was thrown
+            // Don't check specific message text as it varies by PostgreSQL version
+            let message = "\(error)"
+            #expect(!message.isEmpty)
+        }
     }
 
-    guard let insertedId1 = inserted1.first?.id, let insertedId2 = inserted2.first?.id else {
-      Issue.record("Failed to insert reminders")
-      return
+    @Test("Foreign key constraint error is thrown")
+    func testForeignKeyErrorMessage() async throws {
+        do {
+            try await db.write { db in
+                try await Reminder.insert {
+                    Reminder.Draft(
+                        remindersListID: 999999,
+                        title: "Test"
+                    )
+                }.execute(db)
+            }
+            Issue.record("Should have thrown an error")
+        } catch {
+            // Just verify an error was thrown
+            // Don't check specific message text as it varies by PostgreSQL version
+            let message = "\(error)"
+            #expect(!message.isEmpty)
+        }
     }
 
-    // Fetch and verify
-    let reminder1 = try await db.read { db in
-      try await Reminder.find(insertedId1).fetchOne(db)
+    // MARK: - Edge Cases
+
+    @Test("Empty string vs NULL")
+    func testEmptyStringVsNull() async throws {
+        // Insert with empty string
+        let inserted1 = try await db.write { db in
+            try await Reminder.insert {
+                Reminder.Draft(
+                    notes: "",
+                    remindersListID: 1,
+                    title: "Empty notes"
+                )
+            }
+            .returning(\.self)
+            .fetchAll(db)
+        }
+
+        // Insert with NULL (omit notes field for nil)
+        let inserted2 = try await db.write { db in
+            try await Reminder.insert {
+                Reminder.Draft(
+                    remindersListID: 1,
+                    title: "Null notes"
+                )
+            }
+            .returning(\.self)
+            .fetchAll(db)
+        }
+
+        guard let insertedId1 = inserted1.first?.id, let insertedId2 = inserted2.first?.id else {
+            Issue.record("Failed to insert reminders")
+            return
+        }
+
+        // Fetch and verify
+        let reminder1 = try await db.read { db in
+            try await Reminder.find(insertedId1).fetchOne(db)
+        }
+
+        let reminder2 = try await db.read { db in
+            try await Reminder.find(insertedId2).fetchOne(db)
+        }
+
+        #expect(reminder1?.notes == "")
+        #expect(reminder2?.notes == nil || reminder2?.notes == "")
+
+        // Cleanup
+        try await db.write { db in
+            try await Reminder.find([insertedId1, insertedId2]).delete().execute(db)
+        }
     }
 
-    let reminder2 = try await db.read { db in
-      try await Reminder.find(insertedId2).fetchOne(db)
+    @Test("Division by zero")
+    func testDivisionByZero() async throws {
+        await #expect(throws: (any Error).self) {
+            try await db.read { db in
+                try await db.execute("SELECT 1 / 0")
+            }
+        }
     }
 
-    #expect(reminder1?.notes == "")
-    #expect(reminder2?.notes == nil || reminder2?.notes == "")
+    @Test("Very long text value")
+    func testVeryLongTextValue() async throws {
+        // Create a very long string (1MB)
+        let longText = String(repeating: "a", count: 1_000_000)
 
-    // Cleanup
-    try await db.write { db in
-      try await Reminder.find([insertedId1, insertedId2]).delete().execute(db)
-    }
-  }
+        let inserted = try await db.write { db in
+            try await Reminder.insert {
+                Reminder.Draft(
+                    notes: longText,
+                    remindersListID: 1,
+                    title: "Long notes"
+                )
+            }
+            .returning(\.self)
+            .fetchAll(db)
+        }
 
-  @Test("Division by zero")
-  func testDivisionByZero() async throws {
-    await #expect(throws: (any Error).self) {
-      try await db.read { db in
-        try await db.execute("SELECT 1 / 0")
-      }
-    }
-  }
+        guard let insertedId = inserted.first?.id else {
+            Issue.record("Failed to insert reminder")
+            return
+        }
 
-  @Test("Very long text value")
-  func testVeryLongTextValue() async throws {
-    // Create a very long string (1MB)
-    let longText = String(repeating: "a", count: 1_000_000)
+        // Verify it was stored
+        let reminder = try await db.read { db in
+            try await Reminder.find(insertedId).fetchOne(db)
+        }
 
-    let inserted = try await db.write { db in
-      try await Reminder.insert {
-        Reminder.Draft(
-          notes: longText,
-          remindersListID: 1,
-          title: "Long notes"
-        )
-      }
-      .returning(\.self)
-      .fetchAll(db)
-    }
+        if let notes = reminder?.notes {
+            #expect(notes.count == 1_000_000)
+        } else {
+            Issue.record("Notes should not be nil")
+        }
 
-    guard let insertedId = inserted.first?.id else {
-      Issue.record("Failed to insert reminder")
-      return
-    }
-
-    // Verify it was stored
-    let reminder = try await db.read { db in
-      try await Reminder.find(insertedId).fetchOne(db)
+        // Cleanup
+        try await db.write { db in
+            try await Reminder.find(insertedId).delete().execute(db)
+        }
     }
 
-    if let notes = reminder?.notes {
-      #expect(notes.count == 1_000_000)
-    } else {
-      Issue.record("Notes should not be nil")
+    // MARK: - Timeout and Cancellation
+
+    @Test("Query timeout", .disabled("Requires timeout configuration"))
+    func testQueryTimeout() async throws {
+        // Would require setting up a very slow query and timeout configuration
+        // await #expect(throws: (any Error).self) {
+        //     try await db.read { db in
+        //         try await db.execute("SELECT pg_sleep(100)")
+        //     }
+        // }
     }
 
-    // Cleanup
-    try await db.write { db in
-      try await Reminder.find(insertedId).delete().execute(db)
+    @Test("Cancelled operation", .disabled("Requires cancellation setup"))
+    func testCancelledOperation() async throws {
+        // Would require setting up a cancellable task
+        // let task = Task {
+        //     try await db.read { db in
+        //         try await db.execute("SELECT pg_sleep(10)")
+        //     }
+        // }
+        // task.cancel()
+        // await #expect(throws: CancellationError.self) {
+        //     try await task.value
+        // }
     }
-  }
-
-  // MARK: - Timeout and Cancellation
-
-  @Test("Query timeout", .disabled("Requires timeout configuration"))
-  func testQueryTimeout() async throws {
-    // Would require setting up a very slow query and timeout configuration
-    // await #expect(throws: (any Error).self) {
-    //     try await db.read { db in
-    //         try await db.execute("SELECT pg_sleep(100)")
-    //     }
-    // }
-  }
-
-  @Test("Cancelled operation", .disabled("Requires cancellation setup"))
-  func testCancelledOperation() async throws {
-    // Would require setting up a cancellable task
-    // let task = Task {
-    //     try await db.read { db in
-    //         try await db.execute("SELECT pg_sleep(10)")
-    //     }
-    // }
-    // task.cancel()
-    // await #expect(throws: CancellationError.self) {
-    //     try await task.value
-    // }
-  }
 }

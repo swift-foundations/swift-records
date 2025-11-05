@@ -8,74 +8,74 @@ import StructuredQueriesPostgres
 
 @Table
 struct RemindersList: Codable, Equatable, Identifiable {
-  //  static let withReminderCount = group(by: \.id)
-  //    .join(Reminder.all) { $0.id.eq($1.remindersListID) }
-  //    .select { $1.id.count() }
+    //  static let withReminderCount = group(by: \.id)
+    //    .join(Reminder.all) { $0.id.eq($1.remindersListID) }
+    //    .select { $1.id.count() }
 
-  let id: Int
-  var color = 0x4a99ef
-  var title = ""
-  var position = 0
+    let id: Int
+    var color = 0x4a99ef
+    var title = ""
+    var position = 0
 }
 
 @Table
 struct Reminder: Codable, Equatable, Identifiable {
-  static let incomplete = Self.where { !$0.isCompleted }
+    static let incomplete = Self.where { !$0.isCompleted }
 
-  let id: Int
-  var assignedUserID: User.ID?
-  var dueDate: Date?
-  var isCompleted = false
-  var isFlagged = false
-  var notes = ""
-  var priority: Priority?
-  var remindersListID: Int
-  var title = ""
-  var updatedAt: Date = Date(timeIntervalSinceReferenceDate: 1_234_567_890)
-  //  static func searching(_ text: String) -> Where<Reminder> {
-  //    Self.where {
-  //      $0.title.collate(.nocase).contains(text)
-  //        || $0.notes.collate(.nocase).contains(text)
-  //    }
-  //  }
+    let id: Int
+    var assignedUserID: User.ID?
+    var dueDate: Date?
+    var isCompleted = false
+    var isFlagged = false
+    var notes = ""
+    var priority: Priority?
+    var remindersListID: Int
+    var title = ""
+    var updatedAt: Date = Date(timeIntervalSinceReferenceDate: 1_234_567_890)
+    //  static func searching(_ text: String) -> Where<Reminder> {
+    //    Self.where {
+    //      $0.title.collate(.nocase).contains(text)
+    //        || $0.notes.collate(.nocase).contains(text)
+    //    }
+    //  }
 }
 
 @Table
 struct User: Codable, Equatable, Identifiable {
-  let id: Int
-  var name: String
-  var email: String
-  var createdAt: Date
+    let id: Int
+    var name: String
+    var email: String
+    var createdAt: Date
 }
 
 enum Priority: Int, Codable, QueryBindable {
-  case low = 1
-  case medium
-  case high
+    case low = 1
+    case medium
+    case high
 }
 
 extension Reminder.TableColumns {
-  var isHighPriority: some QueryExpression<Bool> {
-    priority == Priority.high
-  }
+    var isHighPriority: some QueryExpression<Bool> {
+        priority == Priority.high
+    }
 }
 //
 @Table
 struct Tag: Codable, Equatable, Identifiable {
-  let id: Int
-  var title = ""
+    let id: Int
+    var title = ""
 }
 
 @Table("remindersTags")
 struct ReminderTag: Equatable {
-  let reminderID: Int
-  let tagID: Int
+    let reminderID: Int
+    let tagID: Int
 }
 
 @Table struct Milestone: Codable, Equatable {
-  let id: Int
-  var remindersListID: RemindersList.ID
-  var title = ""
+    let id: Int
+    var remindersListID: RemindersList.ID
+    var title = ""
 }
 //
 // @Table

@@ -11,18 +11,18 @@ import RecordsTestSupport
 import Testing
 
 extension URL {
-  static var projectRoot: URL {
-    URL(filePath: #filePath)
-      .deletingLastPathComponent()
-      .deletingLastPathComponent()
-      .deletingLastPathComponent()
-      .deletingLastPathComponent()
-  }
+    static var projectRoot: URL {
+        URL(filePath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+    }
 }
 
 // Add EnvironmentVariables configuration
 extension EnvironmentVariables {
-  static let development: Self = try! .live(
-    environmentConfiguration: .projectRoot(.projectRoot, environment: "development")
-  )
+    static let development: Self = try! .live(
+        environmentConfiguration: .projectRoot(.projectRoot, environment: "development")
+    )
 }

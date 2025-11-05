@@ -22,9 +22,9 @@ import PostgresNIO
 ///
 /// The notification system will automatically detect and use this capability.
 public protocol NotificationCapable {
-  /// The underlying PostgresClient, if available.
-  ///
-  /// Return `nil` if this database type doesn't support PostgreSQL notifications.
-  /// This is an async property to support lazy initialization of test databases.
-  var postgresClient: PostgresClient? { get async throws }
+    /// The underlying PostgresClient, if available.
+    ///
+    /// Return `nil` if this database type doesn't support PostgreSQL notifications.
+    /// This is an async property to support lazy initialization of test databases.
+    var postgresClient: PostgresClient? { get async throws }
 }

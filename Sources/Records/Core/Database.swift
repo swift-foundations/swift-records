@@ -149,5 +149,5 @@ import Foundation
 /// }
 /// ```
 public enum Database {
-  // Namespace holder - never instantiated
+    // Namespace holder - never instantiated
 }

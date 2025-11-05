@@ -58,19 +58,19 @@ import Foundation
 /// - Use `.serializable` for critical operations that require complete isolation
 /// - Be prepared to handle serialization errors with retry logic for higher levels
 public enum TransactionIsolationLevel: String, Sendable, CaseIterable {
-  /// Allows dirty reads, non-repeatable reads, and phantom reads.
-  /// In PostgreSQL, behaves the same as `.readCommitted`.
-  case readUncommitted = "READ UNCOMMITTED"
+    /// Allows dirty reads, non-repeatable reads, and phantom reads.
+    /// In PostgreSQL, behaves the same as `.readCommitted`.
+    case readUncommitted = "READ UNCOMMITTED"
 
-  /// Prevents dirty reads but allows non-repeatable reads and phantom reads.
-  /// This is PostgreSQL's default isolation level.
-  case readCommitted = "READ COMMITTED"
+    /// Prevents dirty reads but allows non-repeatable reads and phantom reads.
+    /// This is PostgreSQL's default isolation level.
+    case readCommitted = "READ COMMITTED"
 
-  /// Prevents dirty reads and non-repeatable reads but allows phantom reads.
-  /// May cause serialization errors requiring retry.
-  case repeatableRead = "REPEATABLE READ"
+    /// Prevents dirty reads and non-repeatable reads but allows phantom reads.
+    /// May cause serialization errors requiring retry.
+    case repeatableRead = "REPEATABLE READ"
 
-  /// Prevents dirty reads, non-repeatable reads, and phantom reads.
-  /// Highest isolation but may cause more serialization errors.
-  case serializable = "SERIALIZABLE"
+    /// Prevents dirty reads, non-repeatable reads, and phantom reads.
+    /// Highest isolation but may cause more serialization errors.
+    case serializable = "SERIALIZABLE"
 }

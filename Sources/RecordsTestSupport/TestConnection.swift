@@ -12,62 +12,62 @@ private let testEventLoopGroup = MultiThreadedEventLoopGroup.singleton
 /// Shared PostgresClient for ALL test suites
 /// This prevents "too many connections" by using a single connection pool
 private actor SharedTestClient {
-  private var client: PostgresClient?
-  private var runTask: Task<Void, Never>?
+    private var client: PostgresClient?
+    private var runTask: Task<Void, Never>?
 
-  func getOrCreateClient(configuration: PostgresClient.Configuration) async -> PostgresClient {
-    if let existing = client {
-      return existing
-    }
-
-    // Create shared client with connection pooling
-    let newClient = PostgresClient(
-      configuration: configuration,
-      eventLoopGroup: testEventLoopGroup,
-      backgroundLogger: Logger(label: "test-db")
-    )
-    self.client = newClient
-
-    // Start client.run() once for the shared client
-    let task = Task {
-      await newClient.run()
-    }
-    self.runTask = task
-
-    // Register shutdown handler on first client creation
-    if !shutdownHandlerRegistered {
-      shutdownHandlerRegistered = true
-      atexit {
-        let semaphore = DispatchSemaphore(value: 0)
-        Task {
-          await sharedTestClient.shutdown()
-          semaphore.signal()
+    func getOrCreateClient(configuration: PostgresClient.Configuration) async -> PostgresClient {
+        if let existing = client {
+            return existing
         }
-        _ = semaphore.wait(timeout: .now() + .seconds(5))
-      }
+
+        // Create shared client with connection pooling
+        let newClient = PostgresClient(
+            configuration: configuration,
+            eventLoopGroup: testEventLoopGroup,
+            backgroundLogger: Logger(label: "test-db")
+        )
+        self.client = newClient
+
+        // Start client.run() once for the shared client
+        let task = Task {
+            await newClient.run()
+        }
+        self.runTask = task
+
+        // Register shutdown handler on first client creation
+        if !shutdownHandlerRegistered {
+            shutdownHandlerRegistered = true
+            atexit {
+                let semaphore = DispatchSemaphore(value: 0)
+                Task {
+                    await sharedTestClient.shutdown()
+                    semaphore.signal()
+                }
+                _ = semaphore.wait(timeout: .now() + .seconds(5))
+            }
+        }
+
+        // Give client time to initialize
+        try? await Task.sleep(nanoseconds: 50_000_000)  // 50ms
+
+        return newClient
     }
 
-    // Give client time to initialize
-    try? await Task.sleep(nanoseconds: 50_000_000)  // 50ms
+    func shutdown() async {
+        // Cancel run task
+        runTask?.cancel()
 
-    return newClient
-  }
+        // Wait for cancellation
+        if let task = runTask {
+            await task.value
+        }
 
-  func shutdown() async {
-    // Cancel run task
-    runTask?.cancel()
+        // Shutdown EventLoopGroup
+        try? await testEventLoopGroup.shutdownGracefully()
 
-    // Wait for cancellation
-    if let task = runTask {
-      await task.value
+        client = nil
+        runTask = nil
     }
-
-    // Shutdown EventLoopGroup
-    try? await testEventLoopGroup.shutdownGracefully()
-
-    client = nil
-    runTask = nil
-  }
 }
 
 private let sharedTestClient = SharedTestClient()
@@ -81,37 +81,37 @@ private nonisolated(unsafe) var shutdownHandlerRegistered = false
 /// This prevents "too many connections" errors while maintaining schema isolation
 /// per test suite via PostgreSQL schemas.
 final class TestConnection: Database.Writer, @unchecked Sendable {
-  private let client: PostgresClient
+    private let client: PostgresClient
 
-  /// Exposes the underlying PostgresClient for notification support
-  package var postgresClient: PostgresClient {
-    client
-  }
-
-  init(configuration: PostgresClient.Configuration) async {
-    // Get or create the shared PostgresClient
-    self.client = await sharedTestClient.getOrCreateClient(configuration: configuration)
-  }
-
-  func read<T: Sendable>(
-    _ block: @Sendable (any Database.Connection.`Protocol`) async throws -> T
-  ) async throws -> T {
-    try await client.withConnection { postgresConnection in
-      let connection = Database.Connection(postgresConnection)
-      return try await block(connection)
+    /// Exposes the underlying PostgresClient for notification support
+    package var postgresClient: PostgresClient {
+        client
     }
-  }
 
-  func write<T: Sendable>(
-    _ block: @Sendable (any Database.Connection.`Protocol`) async throws -> T
-  ) async throws -> T {
-    try await client.withConnection { postgresConnection in
-      let connection = Database.Connection(postgresConnection)
-      return try await block(connection)
+    init(configuration: PostgresClient.Configuration) async {
+        // Get or create the shared PostgresClient
+        self.client = await sharedTestClient.getOrCreateClient(configuration: configuration)
     }
-  }
 
-  func close() async throws {
-    // Shutdown handled by global manager
-  }
+    func read<T: Sendable>(
+        _ block: @Sendable (any Database.Connection.`Protocol`) async throws -> T
+    ) async throws -> T {
+        try await client.withConnection { postgresConnection in
+            let connection = Database.Connection(postgresConnection)
+            return try await block(connection)
+        }
+    }
+
+    func write<T: Sendable>(
+        _ block: @Sendable (any Database.Connection.`Protocol`) async throws -> T
+    ) async throws -> T {
+        try await client.withConnection { postgresConnection in
+            let connection = Database.Connection(postgresConnection)
+            return try await block(connection)
+        }
+    }
+
+    func close() async throws {
+        // Shutdown handled by global manager
+    }
 }
