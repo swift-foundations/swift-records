@@ -39,7 +39,7 @@ jobs:
           /opt/homebrew/opt/postgresql@18/bin/createdb test_db
           /opt/homebrew/opt/postgresql@18/bin/psql -d test_db -c "CREATE USER postgres WITH PASSWORD 'postgres' SUPERUSER;"
       - name: Cache Swift packages
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: .build
           key: ${{ runner.os }}-spm-${{ hashFiles('Package.resolved') }}
@@ -83,7 +83,7 @@ jobs:
           /opt/homebrew/opt/postgresql@18/bin/createdb test_db
           /opt/homebrew/opt/postgresql@18/bin/psql -d test_db -c "CREATE USER postgres WITH PASSWORD 'postgres' SUPERUSER;"
       - name: Cache Swift packages
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: .build
           key: ${{ runner.os }}-spm-${{ hashFiles('Package.resolved') }}
@@ -120,7 +120,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: Cache Swift packages
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: .build
           key: ${{ runner.os }}-spm-${{ hashFiles('Package.resolved') }}
