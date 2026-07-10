@@ -24,7 +24,7 @@ let package = Package(
             traits: ["StructuredQueriesPostgresTagged"]
         ),
         .package(url: "https://github.com/vapor/postgres-nio.git", from: "1.21.0"),
-        .package(url: "https://github.com/pointfreeco/swift-dependencies.git", from: "1.10.0"),
+        .package(url: "https://github.com/swift-foundations/swift-dependencies.git", branch: "main"),
         .package(url: "https://github.com/pointfreeco/swift-snapshot-testing.git", from: "1.18.6"),
         .package(url: "https://github.com/coenttb/swift-environment-variables.git", from: "0.0.1"),
         .package(url: "https://github.com/pointfreeco/xctest-dynamic-overlay.git", from: "1.5.0"),
@@ -49,7 +49,7 @@ let package = Package(
                 "Records",
                 .product(name: "StructuredQueriesPostgres", package: "swift-structured-queries-postgres"),
                 .product(name: "Dependencies", package: "swift-dependencies"),
-                .product(name: "DependenciesTestSupport", package: "swift-dependencies"),
+                .product(name: "Dependencies Test Support", package: "swift-dependencies"),
                 .product(name: "InlineSnapshotTesting", package: "swift-snapshot-testing"),
                 .product(name: "StructuredQueriesPostgresTestSupport", package: "swift-structured-queries-postgres"),
             ]
@@ -59,7 +59,7 @@ let package = Package(
             dependencies: [
                 "Records",
                 "RecordsTestSupport",
-                .product(name: "DependenciesTestSupport", package: "swift-dependencies")
+                .product(name: "Dependencies Test Support", package: "swift-dependencies")
             ]
         )
     ],
