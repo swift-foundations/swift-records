@@ -19,15 +19,15 @@ let package = Package(
     ],
     dependencies: [
         .package(
-            url: "https://github.com/coenttb/swift-structured-queries-postgres",
+            url: "https://github.com/swift-foundations/swift-structured-queries-postgres.git",
             from: "0.2.0",
             traits: ["StructuredQueriesPostgresTagged"]
         ),
-        .package(url: "https://github.com/vapor/postgres-nio", from: "1.21.0"),
-        .package(url: "https://github.com/pointfreeco/swift-dependencies", from: "1.10.0"),
-        .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", from: "1.18.6"),
-        .package(url: "https://github.com/coenttb/swift-environment-variables", from: "0.0.1"),
-        .package(url: "https://github.com/pointfreeco/xctest-dynamic-overlay", from: "1.5.0"),
+        .package(url: "https://github.com/vapor/postgres-nio.git", from: "1.21.0"),
+        .package(url: "https://github.com/pointfreeco/swift-dependencies.git", from: "1.10.0"),
+        .package(url: "https://github.com/pointfreeco/swift-snapshot-testing.git", from: "1.18.6"),
+        .package(url: "https://github.com/coenttb/swift-environment-variables.git", from: "0.0.1"),
+        .package(url: "https://github.com/pointfreeco/xctest-dynamic-overlay.git", from: "1.5.0"),
     ],
     targets: [
         .target(
