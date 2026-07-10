@@ -18,11 +18,8 @@ let package = Package(
         )
     ],
     dependencies: [
-        .package(
-            url: "https://github.com/swift-foundations/swift-structured-queries-postgres.git",
-            from: "0.2.0",
-            traits: ["StructuredQueriesPostgresTagged"]
-        ),
+        .package(url: "https://github.com/swift-foundations/swift-structured-queries-postgres.git", branch: "main",
+            traits: ["StructuredQueriesPostgresTagged"]),
         .package(url: "https://github.com/vapor/postgres-nio.git", from: "1.21.0"),
         .package(url: "https://github.com/swift-foundations/swift-dependencies.git", branch: "main"),
         .package(url: "https://github.com/pointfreeco/swift-snapshot-testing.git", from: "1.18.6"),
