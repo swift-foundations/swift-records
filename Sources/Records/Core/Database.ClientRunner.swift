@@ -57,20 +57,28 @@ extension Database {
         public func read<T: Sendable>(
             _ block: @Sendable (any Database.Connection.`Protocol`) async throws -> T
         ) async throws -> T {
-            try await client.read(block)
+            try await client.withConnection { postgresConnection in
+                let connection = Database.Connection(postgresConnection)
+                return try await block(connection)
+            }
         }
 
         /// Performs a database operation that can write.
         public func write<T: Sendable>(
             _ block: @Sendable (any Database.Connection.`Protocol`) async throws -> T
         ) async throws -> T {
-            try await client.write(block)
+            try await client.withConnection { postgresConnection in
+                let connection = Database.Connection(postgresConnection)
+                return try await block(connection)
+            }
         }
 
         /// Closes the client and cancels the run task.
+        ///
+        /// PostgresClient manages its own lifecycle via `run()`; cancelling the
+        /// run task is the shutdown mechanism (there is no direct `close()`).
         public func close() async throws {
             runTask.cancel()
-            try await client.close()
         }
 
         // NO deinit cleanup for tests
@@ -90,7 +98,7 @@ extension Database {
     /// the pool to a single connection. The client is automatically started
     /// and managed.
     public static func singleConnection(
-        configuration: PostgresClient.Configuration,
+        configuration: Database.Configuration,
         logger: Logger? = nil
     ) async -> ClientRunner {
         // Configure for single connection
@@ -121,7 +129,7 @@ extension Database {
     /// configurable min/max connections. The client is automatically started
     /// and managed.
     public static func pool(
-        configuration: PostgresClient.Configuration,
+        configuration: Database.Configuration,
         minConnections: Int = 2,
         maxConnections: Int = 20,
         logger: Logger? = nil
