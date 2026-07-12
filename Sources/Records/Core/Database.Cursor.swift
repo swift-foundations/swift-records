@@ -1,5 +1,4 @@
 import Foundation
-import StructuredQueriesPostgres
 
 // MARK: - Database.Cursor
 

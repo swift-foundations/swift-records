@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import StructuredQueriesPostgres
+import PostgreSQL_Standard
 
 extension Collation {
     /// The `C` collation provides byte-order comparison.

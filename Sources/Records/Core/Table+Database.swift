@@ -1,4 +1,4 @@
-import StructuredQueriesPostgres
+import PostgreSQL_Standard
 
 // MARK: - Extensions for SelectStatement with nothing selected
 

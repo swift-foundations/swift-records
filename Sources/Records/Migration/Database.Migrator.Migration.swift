@@ -1,5 +1,5 @@
 import Foundation
-import StructuredQueriesPostgres
+import PostgreSQL_Standard
 
 extension Database.Migrator {
     // MARK: - Database.Migrator.Migration Table

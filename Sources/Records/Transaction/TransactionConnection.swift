@@ -1,5 +1,5 @@
 import Foundation
-import StructuredQueriesPostgres
+import PostgreSQL_Standard
 
 extension Database {
     /// A wrapper for database connections that are within a transaction.

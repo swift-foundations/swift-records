@@ -1,7 +1,7 @@
 import Foundation
 import NIOCore
 import PostgresNIO
-import StructuredQueriesPostgres
+import PostgreSQL_Standard
 
 // extension Database {
 //    /// A cursor for iterating over PostgreSQL query results

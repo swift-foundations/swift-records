@@ -1,7 +1,7 @@
 import Foundation
 import NIOCore
 import PostgresNIO
-import StructuredQueriesPostgres
+import PostgreSQL_Standard
 
 public struct PostgresQueryDecoder: QueryDecoder {
     internal let row: PostgresRandomAccessRow

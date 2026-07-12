@@ -1,7 +1,7 @@
 import Foundation
 import Logging
 import PostgresNIO
-import StructuredQueriesPostgres
+import PostgreSQL_Standard
 
 extension Database {
     /// Internal wrapper to bridge to PostgresConnection

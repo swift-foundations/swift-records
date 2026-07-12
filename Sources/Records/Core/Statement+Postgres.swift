@@ -1,4 +1,4 @@
-import StructuredQueriesPostgres
+import PostgreSQL_Standard
 
 // MARK: - TemporaryView Validation
 
