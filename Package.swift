@@ -5,58 +5,37 @@ import PackageDescription
 let package = Package(
     name: "swift-records",
     platforms: [
-        .macOS(.v14)
+        .macOS(.v26)
     ],
     products: [
         .library(
             name: "Records",
             targets: ["Records"]
-        ),
-        .library(
-            name: "RecordsTestSupport",
-            targets: ["RecordsTestSupport"]
         )
     ],
     dependencies: [
-        .package(url: "https://github.com/swift-foundations/swift-structured-queries-postgres.git", branch: "main",
-            traits: ["StructuredQueriesPostgresTagged"]),
+        // L2 — institute-native PostgreSQL-dialect DSL (re-exports L1 Structured
+        // Queries Primitives). Replaces the pointfreeco swift-structured-queries-postgres fork.
+        .package(url: "https://github.com/swift-standards/swift-postgresql-standard.git", branch: "main"),
+        // Environment-variable idiom (ServerFoundationEnvVars). Replaces coenttb/swift-environment-variables.
+        .package(url: "https://github.com/swift-foundations/swift-server-foundation.git", branch: "main"),
+        // Wire execution (PostgresNIO confined to Core/PostgresNIO/ + the config entry points).
         .package(url: "https://github.com/vapor/postgres-nio.git", from: "1.21.0"),
-        .package(url: "https://github.com/swift-foundations/swift-dependencies.git", branch: "main"),
-        .package(url: "https://github.com/pointfreeco/swift-snapshot-testing.git", from: "1.18.6"),
-        .package(url: "https://github.com/coenttb/swift-environment-variables.git", from: "0.0.1"),
-        .package(url: "https://github.com/pointfreeco/xctest-dynamic-overlay.git", from: "1.5.0"),
+        // Clocks trait matches the transitive requirement (postgresql-standard →
+        // swift-tests → swift-clocks enables it); declaring it here keeps the direct
+        // edge trait-consistent so the trait-conditional `Clock Primitives` product
+        // resolves.
+        .package(url: "https://github.com/swift-foundations/swift-dependencies.git", branch: "main",
+            traits: ["Clocks"]),
     ],
     targets: [
         .target(
             name: "Records",
             dependencies: [
-                .product(name: "StructuredQueriesPostgres", package: "swift-structured-queries-postgres"),
+                .product(name: "PostgreSQL Standard", package: "swift-postgresql-standard"),
                 .product(name: "PostgresNIO", package: "postgres-nio"),
                 .product(name: "Dependencies", package: "swift-dependencies"),
-                .product(name: "EnvironmentVariables", package: "swift-environment-variables"),
-                .product(name: "IssueReporting", package: "xctest-dynamic-overlay")
-            ],
-            swiftSettings: [
-                .enableExperimentalFeature("AccessLevelOnImport")
-            ]
-        ),
-        .target(
-            name: "RecordsTestSupport",
-            dependencies: [
-                "Records",
-                .product(name: "StructuredQueriesPostgres", package: "swift-structured-queries-postgres"),
-                .product(name: "Dependencies", package: "swift-dependencies"),
-                .product(name: "Dependencies Test Support", package: "swift-dependencies"),
-                .product(name: "InlineSnapshotTesting", package: "swift-snapshot-testing"),
-                .product(name: "StructuredQueriesPostgresTestSupport", package: "swift-structured-queries-postgres"),
-            ]
-        ),
-        .testTarget(
-            name: "RecordsTests",
-            dependencies: [
-                "Records",
-                "RecordsTestSupport",
-                .product(name: "Dependencies Test Support", package: "swift-dependencies")
+                .product(name: "ServerFoundationEnvVars", package: "swift-server-foundation"),
             ]
         )
     ],
