@@ -1,6 +1,5 @@
 import Foundation
-import IssueReporting
-import StructuredQueriesPostgres
+import PostgreSQL_Standard
 
 // MARK: - Database.Migrator
 
@@ -151,9 +150,14 @@ extension Database {
             foreignKeyChecks: ForeignKeyChecks? = nil,
             migrate: @escaping @Sendable (any Database.Connection.`Protocol`) async throws -> Void
         ) {
-            // Check for duplicate identifiers
+            // Check for duplicate identifiers. Registering the same identifier
+            // twice is a programmer error in migration setup, so fail loud in
+            // debug/test builds; release builds skip the duplicate (the `return`
+            // below preserves the pre-port warn-and-continue behavior).
             if migrations.contains(where: { $0.identifier == identifier }) {
-                reportIssue("Migration with identifier '\(identifier)' is already registered")
+                assertionFailure(
+                    "Migration with identifier '\(identifier)' is already registered"
+                )
                 return
             }
 
