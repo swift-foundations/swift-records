@@ -1,8 +1,8 @@
 import Dependencies
-import EnvironmentVariables
 import Foundation
 import NIOSSL
 import PostgresNIO
+import ServerFoundationEnvVars
 
 // MARK: - Configuration Errors
 
@@ -58,7 +58,7 @@ extension PostgresClient.Configuration {
     ///
     /// - Returns: A configuration built from environment variables.
     /// - Throws: ``Database.ConfigurationError`` if required environment variables are missing or invalid.
-    public static func fromEnvironment() throws -> PostgresClient.Configuration {
+    public static func fromEnvironment() throws -> Database.Configuration {
         @Dependency(\.envVars) var envVars
 
         // Get host

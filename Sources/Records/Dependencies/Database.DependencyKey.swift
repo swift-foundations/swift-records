@@ -17,7 +17,7 @@ extension Database {
     ///     }
     /// }
     /// ```
-    public struct DependencyKey: Dependencies.DependencyKey {
+    public struct DependencyKey: Dependency.Key {
         public static let liveValue: any Writer = Unconfigured()
         public static let testValue: any Writer = Unconfigured()
     }
@@ -25,7 +25,7 @@ extension Database {
 
 // MARK: - DependencyValues Extension
 
-extension DependencyValues {
+extension Dependency.Values {
     /// The default database connection.
     ///
     /// Configure this dependency at app startup:
