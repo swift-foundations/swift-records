@@ -151,7 +151,11 @@ extension Database.Writer {
         _ name: String? = nil,
         _ block: @Sendable (any Database.Connection.`Protocol`) async throws -> T
     ) async throws -> T {
-        let savepointName = name ?? "sp_\(UUID().uuidString.prefix(8))"
+        // Ring review R-05: savepoint names cannot be bound parameters, so the
+        // identifier is validated and quoted before interpolation.
+        let savepointName = try Database.quotedSavepointName(
+            name ?? "sp_\(UUID().uuidString.prefix(8))"
+        )
 
         return try await write { db in
             try await db.execute("SAVEPOINT \(savepointName)")
@@ -167,5 +171,29 @@ extension Database.Writer {
                 throw error
             }
         }
+    }
+}
+
+extension Database {
+    /// Validates and quotes a savepoint identifier for safe SQL interpolation.
+    ///
+    /// Savepoint names cannot be bound parameters, so the identifier is validated
+    /// (alphanumerics plus `_-`, non-empty, at most 63 characters — the PostgreSQL
+    /// identifier limit) and then double-quoted. Mirrors the notification
+    /// `SQLIdentifier` validation discipline.
+    ///
+    /// - Parameter name: The savepoint name to validate.
+    /// - Returns: The quoted identifier, safe to interpolate into savepoint statements.
+    /// - Throws: ``Database/Error/invalidSavepointName(_:)`` if validation fails.
+    package static func quotedSavepointName(_ name: String) throws -> String {
+        let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_-"))
+        guard
+            !name.isEmpty,
+            name.count <= 63,
+            name.unicodeScalars.allSatisfy({ allowed.contains($0) })
+        else {
+            throw Database.Error.invalidSavepointName(name)
+        }
+        return "\"\(name)\""
     }
 }

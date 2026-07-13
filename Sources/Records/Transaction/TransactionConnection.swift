@@ -151,7 +151,11 @@ extension Database.TransactionConnection {
         _ name: String? = nil,
         _ block: @Sendable (any Database.Connection.`Protocol`) async throws -> T
     ) async throws -> T {
-        let savepointName = name ?? "sp_\(UUID().uuidString.prefix(8))"
+        // Ring review R-05: savepoint names cannot be bound parameters, so the
+        // identifier is validated and quoted before interpolation.
+        let savepointName = try Database.quotedSavepointName(
+            name ?? "sp_\(UUID().uuidString.prefix(8))"
+        )
 
         try await execute("SAVEPOINT \(savepointName)")
         do {

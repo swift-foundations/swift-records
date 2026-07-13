@@ -151,14 +151,14 @@ extension Database {
             migrate: @escaping @Sendable (any Database.Connection.`Protocol`) async throws -> Void
         ) {
             // Check for duplicate identifiers. Registering the same identifier
-            // twice is a programmer error in migration setup, so fail loud in
-            // debug/test builds; release builds skip the duplicate (the `return`
-            // below preserves the pre-port warn-and-continue behavior).
+            // twice is a programmer error in migration setup: fail loud in EVERY
+            // configuration (ring review R-04 class — a release-build silent skip
+            // means a renamed-then-renamed-back migration never re-runs and nobody
+            // knows). Registration happens at boot, so failing fast is safe.
             if migrations.contains(where: { $0.identifier == identifier }) {
-                assertionFailure(
+                preconditionFailure(
                     "Migration with identifier '\(identifier)' is already registered"
                 )
-                return
             }
 
             migrations.append((identifier, migrate))

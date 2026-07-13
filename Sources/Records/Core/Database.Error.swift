@@ -30,6 +30,9 @@ extension Database {
         /// Invalid configuration provided.
         case invalidConfiguration(message: String)
 
+        /// Invalid savepoint identifier.
+        case invalidSavepointName(String)
+
         /// Invalid notification channel specification.
         case invalidNotificationChannels(String)
 
@@ -77,6 +80,10 @@ extension Database {
 
             case .invalidConfiguration(let message):
                 return "Invalid database configuration: \(message)"
+
+            case .invalidSavepointName(let name):
+                return
+                    "Invalid savepoint name '\(name)': must contain only alphanumeric characters, underscores, and hyphens (max 63 chars)"
 
             case .invalidNotificationChannels(let message):
                 return "Invalid notification channels: \(message)"
