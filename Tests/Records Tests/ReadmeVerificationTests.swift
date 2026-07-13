@@ -1,4 +1,5 @@
 import Dependencies
+import PostgresNIO
 import Testing
 
 @testable import Records

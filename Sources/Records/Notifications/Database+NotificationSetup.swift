@@ -1,6 +1,8 @@
 import Foundation
-import StructuredQueriesPostgres
-import Tagged
+import PostgreSQL_Standard
+import Structured_Queries_Primitives_Support
+import Tagged_Primitives
+import Tagged_Primitives_Standard_Library_Integration
 
 // Note: Notification channel setup is provided as extensions on Database.Connection.Protocol
 // See Database+NotificationSetup.swift for the type-safe API
@@ -120,7 +122,7 @@ extension Database.Connection.`Protocol` {
         schema: Schema.Type
     ) async throws {
         let functionName = FunctionName(
-            stringLiteral: "\(Schema.TableType.tableName)_\(Schema.channel.name.rawValue)_notify"
+            stringLiteral: "\(Schema.TableType.tableName)_\(Schema.channel.name.underlying)_notify"
         )
 
         print(
@@ -156,7 +158,7 @@ extension Database.Connection.`Protocol` {
         channel: ChannelName,
         includeOldValues: Bool
     ) async throws {
-        let functionName = FunctionName(stringLiteral: "\(On.tableName)_\(channel.rawValue)_notify")
+        let functionName = FunctionName(stringLiteral: "\(On.tableName)_\(channel.underlying)_notify")
 
         let payloadExpression: String
         if includeOldValues {
@@ -189,11 +191,11 @@ extension Database.Connection.`Protocol` {
             """
 
         print(
-            "📢 Creating notification trigger function '\(functionName.rawValue)' for channel '\(channel.rawValue)'"
+            "📢 Creating notification trigger function '\(functionName.underlying)' for channel '\(channel.underlying)'"
         )
         do {
             try await execute(sql)
-            print("✅ Successfully created notification trigger function '\(functionName.rawValue)'")
+            print("✅ Successfully created notification trigger function '\(functionName.underlying)'")
         } catch {
             print("❌ Failed to create notification trigger function: \(String(reflecting: error))")
             throw error
@@ -218,8 +220,8 @@ extension Database.Connection.`Protocol` {
             throw Database.Error.invalidNotificationChannels("At least one trigger event required")
         }
 
-        let triggerName = TriggerName(stringLiteral: "\(On.tableName)_\(channel.rawValue)_trigger")
-        let functionName = FunctionName(stringLiteral: "\(On.tableName)_\(channel.rawValue)_notify")
+        let triggerName = TriggerName(stringLiteral: "\(On.tableName)_\(channel.underlying)_trigger")
+        let functionName = FunctionName(stringLiteral: "\(On.tableName)_\(channel.underlying)_notify")
 
         let eventList = events.map(\.rawValue).sorted().joined(separator: " OR ")
         let timingKeyword = timing.rawValue
@@ -231,11 +233,11 @@ extension Database.Connection.`Protocol` {
             """
 
         print(
-            "📢 Creating notification trigger '\(triggerName.rawValue)' on table '\(On.tableName)'"
+            "📢 Creating notification trigger '\(triggerName.underlying)' on table '\(On.tableName)'"
         )
         do {
             try await execute(sql)
-            print("✅ Successfully created notification trigger '\(triggerName.rawValue)'")
+            print("✅ Successfully created notification trigger '\(triggerName.underlying)'")
         } catch {
             print("❌ Failed to create notification trigger: \(String(reflecting: error))")
             throw error
@@ -254,16 +256,16 @@ extension Database.Connection.`Protocol` {
         channel: ChannelName,
         ifExists: Bool
     ) async throws {
-        let triggerName = TriggerName(stringLiteral: "\(On.tableName)_\(channel.rawValue)_trigger")
+        let triggerName = TriggerName(stringLiteral: "\(On.tableName)_\(channel.underlying)_trigger")
         let ifExistsClause = ifExists ? "IF EXISTS " : ""
         let sql = "DROP TRIGGER \(ifExistsClause)\(triggerName.quoted) ON \(On.tableName.quoted())"
 
         print(
-            "📢 Dropping notification trigger '\(triggerName.rawValue)' from table '\(On.tableName)'"
+            "📢 Dropping notification trigger '\(triggerName.underlying)' from table '\(On.tableName)'"
         )
         do {
             try await execute(sql)
-            print("✅ Successfully dropped notification trigger '\(triggerName.rawValue)'")
+            print("✅ Successfully dropped notification trigger '\(triggerName.underlying)'")
         } catch {
             print("❌ Failed to drop notification trigger: \(String(reflecting: error))")
             throw error
@@ -283,10 +285,10 @@ extension Database.Connection.`Protocol` {
         let ifExistsClause = ifExists ? "IF EXISTS " : ""
         let sql = "DROP FUNCTION \(ifExistsClause)\(name.quoted)()"
 
-        print("📢 Dropping notification trigger function '\(name.rawValue)'")
+        print("📢 Dropping notification trigger function '\(name.underlying)'")
         do {
             try await execute(sql)
-            print("✅ Successfully dropped notification trigger function '\(name.rawValue)'")
+            print("✅ Successfully dropped notification trigger function '\(name.underlying)'")
         } catch {
             print("❌ Failed to drop notification trigger function: \(String(reflecting: error))")
             throw error

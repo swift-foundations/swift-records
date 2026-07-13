@@ -1,6 +1,7 @@
 import Foundation
 import PostgresNIO
-import Tagged
+import Tagged_Primitives
+import Tagged_Primitives_Standard_Library_Integration
 
 extension Database {
     /// Internal stream of raw notifications from PostgreSQL LISTEN/NOTIFY.
@@ -213,7 +214,7 @@ extension Database.Reader {
             .BufferingPolicy = .bufferingNewest(100)
     ) async throws -> Database.NotificationStream<Payload> {
         try await _notifications(
-            channel: channel.rawValue,
+            channel: channel.underlying,
             decoder: decoder,
             bufferStrategy: bufferStrategy
         )
@@ -354,7 +355,7 @@ extension Database.Reader {
             .BufferingPolicy = .bufferingNewest(100)
     ) async throws -> Database.NotificationEventStream<Payload> {
         try await _notificationEvents(
-            channel: channel.rawValue,
+            channel: channel.underlying,
             decoder: decoder,
             bufferStrategy: bufferStrategy
         )

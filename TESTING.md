@@ -6,7 +6,7 @@
 
 ### Why?
 
-`swift-structured-queries-postgres` already validates SQL generation with 280+ tests. Duplicating those tests here would be:
+`swift-postgresql-standard` already validates SQL generation with 280+ tests. Duplicating those tests here would be:
 - Redundant
 - Expensive to maintain
 - Confusing about what swift-records actually does
@@ -31,14 +31,17 @@
 - Concurrent access patterns
 
 ❌ **What We Don't Test**
-- SQL string generation (covered by swift-structured-queries-postgres)
+- SQL string generation (covered by swift-postgresql-standard)
 - SQL syntax validation (handled by PostgreSQL parser)
-- Query builder DSL correctness (covered by swift-structured-queries-postgres)
+- Query builder DSL correctness (covered by swift-postgresql-standard)
 
 ## Test Organization
 
 ```
-Tests/RecordsTests/
+Tests/                                  (nested package — swift test runs from Tests/)
+├── Package.swift                   Nested manifest per [INST-TEST]
+├── Records Test Support/           Test support target (assertQuery, TestDatabase)
+└── Records Tests/
 ├── Integration/                    PRIMARY FOCUS
 │   ├── Execution/                  Query execution tests
 │   │   ├── SelectExecutionTests.swift
@@ -176,7 +179,7 @@ swift test --filter SelectExecutionTests
 ## History
 
 **2025-10-13:** Refactored to integration-only testing
-- Removed SQL generation snapshot tests (redundant with swift-structured-queries-postgres)
+- Removed SQL generation snapshot tests (redundant with swift-postgresql-standard)
 - Reorganized by integration concern (Execution, Database, Transactions, Features)
 - Reduced test codebase by ~1,700 lines
-- Clarified testing responsibilities between swift-records and swift-structured-queries-postgres
+- Clarified testing responsibilities between swift-records and swift-postgresql-standard

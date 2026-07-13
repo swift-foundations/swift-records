@@ -1,8 +1,8 @@
 import Dependencies
 import Foundation
 import Records
-import RecordsTestSupport
-import StructuredQueriesPostgres
+import Records_Test_Support
+import PostgreSQL_Standard
 import Testing
 
 /// Integration tests for JSONB with database execution

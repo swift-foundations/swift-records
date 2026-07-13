@@ -1,6 +1,6 @@
 import Dependencies
 import Foundation
-import RecordsTestSupport
+import Records_Test_Support
 import Testing
 
 @Suite(
@@ -286,7 +286,7 @@ struct DeleteExecutionTests {
         }
 
         #expect(deleted.count == 3)
-        #expect(Set(deleted.map(\.id)) == Set(ids))
+        #expect(Swift.Set(deleted.map(\.id)) == Swift.Set(ids))
 
         // Verify all deleted
         let remaining = try await db.read { db in

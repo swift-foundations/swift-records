@@ -1,7 +1,7 @@
 import Dependencies
 import Foundation
 import Records
-import RecordsTestSupport
+import Records_Test_Support
 import Testing
 
 @Suite(
@@ -127,7 +127,7 @@ struct ConcurrencyStressTests {
             }
 
             // Group errors by type
-            let errorTypes = Dictionary(grouping: failures) { $0.error ?? "unknown" }
+            let errorTypes = Swift.Dictionary(grouping: failures) { $0.error ?? "unknown" }
             print("\n=== Error Distribution ===")
             for (errorType, instances) in errorTypes.sorted(by: { $0.value.count > $1.value.count })
             {

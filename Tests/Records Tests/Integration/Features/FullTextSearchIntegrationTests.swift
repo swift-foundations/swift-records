@@ -1,8 +1,8 @@
 import Dependencies
-import DependenciesTestSupport
+import Dependencies_Test_Support
 import Foundation
-import RecordsTestSupport
-import StructuredQueriesPostgres
+import Records_Test_Support
+import PostgreSQL_Standard
 import Testing
 
 // MARK: - Test Suite
@@ -160,7 +160,7 @@ struct FullTextSearchIntegrationTests {
 
             #expect(articles.count >= 2)
 
-            let titles = Set(articles.map(\.title))
+            let titles = Swift.Set(articles.map(\.title))
             #expect(titles.contains("PostgreSQL Full-Text Search"))
             #expect(titles.contains("Swift Concurrency Guide"))
         } catch {
@@ -277,7 +277,7 @@ struct FullTextSearchIntegrationTests {
 
             #expect(articles.count >= 2)
 
-            let titles = Set(articles.map(\.title))
+            let titles = Swift.Set(articles.map(\.title))
             #expect(
                 titles.contains("Swift Concurrency Guide")
                     || titles.contains("PostgreSQL Full-Text Search")
@@ -387,7 +387,7 @@ struct FullTextSearchIntegrationTests {
             // Both articles with "Swift" in title
             #expect(results.count == 2)
 
-            let titles = Set(results.map(\.title))
+            let titles = Swift.Set(results.map(\.title))
             #expect(titles.contains("Swift Concurrency Guide"))
             #expect(titles.contains("Server-Side Swift"))
         } catch {

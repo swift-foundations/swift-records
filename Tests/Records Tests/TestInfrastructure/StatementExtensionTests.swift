@@ -1,7 +1,7 @@
 import Dependencies
-import DependenciesTestSupport
+import Dependencies_Test_Support
 import Foundation
-import RecordsTestSupport
+import Records_Test_Support
 import Testing
 
 @Suite(

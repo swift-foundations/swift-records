@@ -1,8 +1,8 @@
 import Dependencies
-import DependenciesTestSupport
+import Dependencies_Test_Support
 import Foundation
-import RecordsTestSupport
-import StructuredQueriesPostgres
+import Records_Test_Support
+import PostgreSQL_Standard
 import Testing
 
 // MARK: - Test Suite
@@ -112,7 +112,7 @@ extension SnapshotIntegrationTests.Features.JSONB {
                     .fetchAll(db)
 
                 #expect(usersWithNotifications.count == 2)
-                #expect(Set(usersWithNotifications.map(\.name)) == Set(["Bob", "Diana"]))
+                #expect(Swift.Set(usersWithNotifications.map(\.name)) == Swift.Set(["Bob", "Diana"]))
             }
         }
 
@@ -139,7 +139,7 @@ extension SnapshotIntegrationTests.Features.JSONB {
                     .fetchAll(db)
 
                 #expect(users.count == 2)
-                #expect(Set(users.map(\.name)) == Set(["Bob", "Charlie"]))
+                #expect(Swift.Set(users.map(\.name)) == Swift.Set(["Bob", "Charlie"]))
             }
         }
 

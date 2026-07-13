@@ -1,9 +1,8 @@
-import CustomDump
 import Foundation
-import InlineSnapshotTesting
+import PostgreSQL_Standard
+import PostgreSQL_Standard_Test_Support
 import Records
-import StructuredQueriesPostgres
-import StructuredQueriesPostgresTestSupport
+import Tests_Inline_Snapshot
 
 /// An end-to-end async snapshot testing helper for PostgreSQL statements.
 ///
@@ -25,27 +24,24 @@ import StructuredQueriesPostgresTestSupport
 ///   ┌────────────────────────────┐
 ///   │ "Buy concert tickets"      │
 ///   │ "Call accountant"          │
-///   │ "Doctor appointment"       │
-///   │ "Get laundry"              │
-///   │ "Groceries"                │
-///   │ "Haircut"                  │
-///   │ "Pick up kids from school" │
-///   │ "Send weekly emails"       │
-///   │ "Take a walk"              │
-///   │ "Take out trash"           │
 ///   └────────────────────────────┘
 ///   """
 /// }
 /// ```
+///
+/// Ported off pointfreeco InlineSnapshotTesting onto the institute
+/// `Tests Inline Snapshot` surface. The institute rewriter targets call sites by
+/// (file, line, column) and has no trailing-closure descriptor, so when BOTH the
+/// `sql:` and `results:` snapshots of one call need re-recording the writes collide —
+/// record one at a time in that case. Matching (non-recording) runs are unaffected.
 ///
 /// - Parameters:
 ///   - query: A statement.
 ///   - execute: An async closure responsible for executing the query and returning the results.
 ///   - sql: A snapshot of the SQL produced by the statement.
 ///   - results: A snapshot of the results.
-///   - snapshotTrailingClosureOffset: The trailing closure offset of the `sql` snapshot. Defaults
-///     to `1` for invoking this helper directly, but if you write a wrapper function that automates
-///     the `execute` trailing closure, you should pass `0` instead.
+///   - snapshotTrailingClosureOffset: Retained for call-site compatibility with the
+///     pointfree-era signature; the institute rewriter does not consume it.
 ///   - fileID: The source `#fileID` associated with the assertion.
 ///   - filePath: The source `#filePath` associated with the assertion.
 ///   - function: The source `#function` associated with the assertion
@@ -58,21 +54,17 @@ public func assertQuery<each V: QueryRepresentable, S: Statement<(repeat each V)
     sql: (() -> String)? = nil,
     results: (() -> String)? = nil,
     snapshotTrailingClosureOffset: Int = 1,
-    fileID: StaticString = #fileID,
-    filePath: StaticString = #filePath,
-    function: StaticString = #function,
-    line: UInt = #line,
-    column: UInt = #column
+    fileID: String = #fileID,
+    filePath: String = #filePath,
+    function: String = #function,
+    line: Int = #line,
+    column: Int = #column
 ) async where repeat each V: Sendable, repeat (each V).QueryOutput: Sendable, S: Sendable {
     // SQL snapshot (synchronous - query building is sync)
     assertInlineSnapshot(
         of: query,
         as: .sql,
         message: "Query did not match",
-        syntaxDescriptor: InlineSnapshotSyntaxDescriptor(
-            trailingClosureLabel: "sql",
-            trailingClosureOffset: snapshotTrailingClosureOffset
-        ),
         matches: sql,
         fileID: fileID,
         file: filePath,
@@ -88,31 +80,11 @@ public func assertQuery<each V: QueryRepresentable, S: Statement<(repeat each V)
         printTable(rows, to: &table)
 
         // Results snapshot (synchronous - formatting is sync)
-        if !table.isEmpty {
+        if !table.isEmpty || results != nil {
             assertInlineSnapshot(
                 of: table,
                 as: .lines,
-                message: "Results did not match",
-                syntaxDescriptor: InlineSnapshotSyntaxDescriptor(
-                    trailingClosureLabel: "results",
-                    trailingClosureOffset: snapshotTrailingClosureOffset + 1
-                ),
-                matches: results,
-                fileID: fileID,
-                file: filePath,
-                function: function,
-                line: line,
-                column: column
-            )
-        } else if results != nil {
-            assertInlineSnapshot(
-                of: table,
-                as: .lines,
-                message: "Results expected to be empty",
-                syntaxDescriptor: InlineSnapshotSyntaxDescriptor(
-                    trailingClosureLabel: "results",
-                    trailingClosureOffset: snapshotTrailingClosureOffset + 1
-                ),
+                message: table.isEmpty ? "Results expected to be empty" : "Results did not match",
                 matches: results,
                 fileID: fileID,
                 file: filePath,
@@ -127,10 +99,6 @@ public func assertQuery<each V: QueryRepresentable, S: Statement<(repeat each V)
             of: error.localizedDescription,
             as: .lines,
             message: "Results did not match",
-            syntaxDescriptor: InlineSnapshotSyntaxDescriptor(
-                trailingClosureLabel: "results",
-                trailingClosureOffset: snapshotTrailingClosureOffset + 1
-            ),
             matches: results,
             fileID: fileID,
             file: filePath,
@@ -143,42 +111,7 @@ public func assertQuery<each V: QueryRepresentable, S: Statement<(repeat each V)
 
 /// An end-to-end async snapshot testing helper for PostgreSQL statements.
 ///
-/// This helper can be used to generate snapshots of both the given query and the results of the
-/// query decoded back into Swift.
-///
-/// ```swift
-/// await assertQuery(
-///   Reminder.select(\.title).order(by: \.title)
-/// ) {
-///   try await db.read { try await $0.fetchAll($1) }
-/// } sql: {
-///   """
-///   SELECT "reminders"."title" FROM "reminders"
-///   ORDER BY "reminders"."title"
-///   """
-/// } results: {
-///   """
-///   ┌────────────────────────────┐
-///   │ "Buy concert tickets"      │
-///   │ "Call accountant"          │
-///   └────────────────────────────┘
-///   """
-/// }
-/// ```
-///
-/// - Parameters:
-///   - query: A statement.
-///   - execute: An async closure responsible for executing the query and returning the results.
-///   - sql: A snapshot of the SQL produced by the statement.
-///   - results: A snapshot of the results.
-///   - snapshotTrailingClosureOffset: The trailing closure offset of the `sql` snapshot. Defaults
-///     to `1` for invoking this helper directly, but if you write a wrapper function that automates
-///     the `execute` trailing closure, you should pass `0` instead.
-///   - fileID: The source `#fileID` associated with the assertion.
-///   - filePath: The source `#filePath` associated with the assertion.
-///   - function: The source `#function` associated with the assertion
-///   - line: The source `#line` associated with the assertion.
-///   - column: The source `#column` associated with the assertion.
+/// See the primary overload above; this variant covers select statements with joins.
 public func assertQuery<S: SelectStatement, each J: Table>(
     _ query: S,
     execute:
@@ -188,11 +121,11 @@ public func assertQuery<S: SelectStatement, each J: Table>(
     sql: (() -> String)? = nil,
     results: (() -> String)? = nil,
     snapshotTrailingClosureOffset: Int = 1,
-    fileID: StaticString = #fileID,
-    filePath: StaticString = #filePath,
-    function: StaticString = #function,
-    line: UInt = #line,
-    column: UInt = #column
+    fileID: String = #fileID,
+    filePath: String = #filePath,
+    function: String = #function,
+    line: Int = #line,
+    column: Int = #column
 ) async
 where
     S.QueryValue == (), S.Joins == (repeat each J), S.From: Sendable, S.From.QueryOutput: Sendable,
@@ -225,8 +158,7 @@ public func printTable<each C>(_ rows: [(repeat each C)], to output: inout some 
         var maxRowSpan = 0
         for column in repeat each row {
             defer { index += 1 }
-            var cell = ""
-            customDump(column, to: &cell)
+            let cell = renderCell(column)
             let lines: [Substring] = cell.split(separator: "\n")
             hasMultiLineRows = hasMultiLineRows || lines.count > 1
             maxRowSpan = max(maxRowSpan, lines.count)
@@ -281,4 +213,24 @@ public func printTable<each C>(_ rows: [(repeat each C)], to output: inout some 
             .joined(separator: "─┴─")
     )
     output.write("─┘")
+}
+
+/// Renders a single table cell.
+///
+/// Replicates the pointfree `customDump` scalar rendering the recorded snapshots
+/// were produced with: optionals unwrap transparently (`nil` for none), strings
+/// render quoted via `debugDescription`, everything else via `String(describing:)`.
+private func renderCell(_ value: some Any) -> String {
+    let mirror = Mirror(reflecting: value)
+    if mirror.displayStyle == .optional {
+        guard let child = mirror.children.first else { return "nil" }
+        return renderCell(child.value)
+    }
+    if let string = value as? String {
+        return string.debugDescription
+    }
+    if mirror.displayStyle == .enum {
+        return ".\(value)"
+    }
+    return String(describing: value)
 }

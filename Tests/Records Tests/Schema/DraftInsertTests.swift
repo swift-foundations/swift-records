@@ -1,9 +1,10 @@
 import Dependencies
-import DependenciesTestSupport
+import Dependencies_Test_Support
 import Foundation
-import Records
-import RecordsTestSupport
-import StructuredQueriesPostgres
+import PostgresNIO
+@testable import Records
+import Records_Test_Support
+import PostgreSQL_Standard
 import Testing
 
 // Test model similar to Repository.Traffic.Hourly.Record with UUID primary key

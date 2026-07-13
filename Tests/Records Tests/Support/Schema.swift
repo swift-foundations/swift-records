@@ -1,7 +1,7 @@
 import Dependencies
 import Foundation
-import RecordsTestSupport
-import StructuredQueriesPostgres
+import Records_Test_Support
+import PostgreSQL_Standard
 
 // TODO: Migrate to PostgreSQL test infrastructure
 // import StructuredQueriesSQLite

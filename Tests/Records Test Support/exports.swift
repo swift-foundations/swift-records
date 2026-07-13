@@ -1,8 +1,8 @@
 @_exported import Dependencies
-@_exported import DependenciesTestSupport
-@_exported import EnvironmentVariables
+@_exported import Dependencies_Test_Support
+@_exported import ServerFoundationEnvVars
 @_exported import Foundation
-@_exported import InlineSnapshotTesting
+@_exported import Tests_Inline_Snapshot
 @_exported import Records
-@_exported import StructuredQueriesPostgres
-@_exported import StructuredQueriesPostgresTestSupport
+@_exported import PostgreSQL_Standard
+@_exported import PostgreSQL_Standard_Test_Support

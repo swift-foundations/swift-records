@@ -82,6 +82,11 @@ private nonisolated(unsafe) var shutdownHandlerRegistered = false
 /// per test suite via PostgreSQL schemas.
 final class TestConnection: Database.Writer, @unchecked Sendable {
     private let client: PostgresClient
+    // `Database.Connection`'s wrapping init is package-scoped inside Records (wire
+    // types deliberately confined), so this nested-package support delegates the
+    // connection wrapping to the public `Database.ClientRunner` Writer. The shared
+    // client's `run()` is owned by SharedTestClient; the runner must not start its own.
+    private let runner: Database.ClientRunner
 
     /// Exposes the underlying PostgresClient for notification support
     package var postgresClient: PostgresClient {
@@ -90,25 +95,21 @@ final class TestConnection: Database.Writer, @unchecked Sendable {
 
     init(configuration: PostgresClient.Configuration) async {
         // Get or create the shared PostgresClient
-        self.client = await sharedTestClient.getOrCreateClient(configuration: configuration)
+        let client = await sharedTestClient.getOrCreateClient(configuration: configuration)
+        self.client = client
+        self.runner = await Database.ClientRunner(client: client, startRunTask: false)
     }
 
     func read<T: Sendable>(
         _ block: @Sendable (any Database.Connection.`Protocol`) async throws -> T
     ) async throws -> T {
-        try await client.withConnection { postgresConnection in
-            let connection = Database.Connection(postgresConnection)
-            return try await block(connection)
-        }
+        try await runner.read(block)
     }
 
     func write<T: Sendable>(
         _ block: @Sendable (any Database.Connection.`Protocol`) async throws -> T
     ) async throws -> T {
-        try await client.withConnection { postgresConnection in
-            let connection = Database.Connection(postgresConnection)
-            return try await block(connection)
-        }
+        try await runner.write(block)
     }
 
     func close() async throws {

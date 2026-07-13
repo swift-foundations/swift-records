@@ -1,6 +1,7 @@
 import Dependencies
 import Records
-import RecordsTestSupport
+import Records_Test_Support
+import Tests_Apple_Testing_Bridge
 import Testing
 
 @Suite(
@@ -15,7 +16,7 @@ struct AssertQueryValidationTests {
     @Dependency(\.defaultDatabase) var db
 
     @Test func simpleSelectWithExplicitExecute() async {
-        await RecordsTestSupport.assertQuery(
+        await Records_Test_Support.assertQuery(
             Reminder.select { $0.title }.order(by: \.title).limit(3),
             execute: { statement in
                 try await db.read { db in

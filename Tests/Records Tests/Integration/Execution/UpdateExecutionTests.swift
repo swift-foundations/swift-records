@@ -1,6 +1,6 @@
 import Dependencies
 import Foundation
-import RecordsTestSupport
+import Records_Test_Support
 import Testing
 
 @Suite(
@@ -281,7 +281,7 @@ struct ExecutionUpdateTests {
         try await db.write { db in
             try await Reminder
                 .where { $0.id == id }
-                .update { $0.notes = $0.notes + " - Updated" }
+                .update { $0.notes = SQLQueryExpression($0.notes) + " - Updated" }
                 .execute(db)
         }
 

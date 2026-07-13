@@ -1,6 +1,7 @@
 import Foundation
-import StructuredQueriesPostgres
-import Tagged
+import PostgreSQL_Standard
+import Tagged_Primitives
+import Tagged_Primitives_Standard_Library_Integration
 
 // MARK: - Tagged Type Aliases for SQL Identifiers
 
@@ -50,7 +51,7 @@ public typealias TriggerName = Tagged<Database.Notification.TriggerNameTag, Stri
 
 // MARK: - ChannelName Extensions
 
-extension Tagged where Tag == Database.Notification.ChannelNameTag, RawValue == String {
+extension Tagged where Tag == Database.Notification.ChannelNameTag, Underlying == String {
     /// Creates a validated channel name.
     ///
     /// Channel names must:
@@ -66,7 +67,7 @@ extension Tagged where Tag == Database.Notification.ChannelNameTag, RawValue == 
                 "Invalid channel name '\(name)': must contain only alphanumeric characters, underscores, and hyphens (max 63 chars)"
             )
         }
-        self.init(rawValue: name)
+        self.init(_unchecked: name)
     }
 
     /// Creates a channel name from a validated table name.
@@ -77,7 +78,7 @@ extension Tagged where Tag == Database.Notification.ChannelNameTag, RawValue == 
     @inlinable
     public init(tableName: String) {
         // Safe: @Table macro ensures tableName is valid
-        self.init(rawValue: tableName)
+        self.init(_unchecked: tableName)
     }
 
     /// Creates a channel name from a string literal with runtime validation.
@@ -105,13 +106,13 @@ extension Tagged where Tag == Database.Notification.ChannelNameTag, RawValue == 
     /// This ensures the identifier is properly escaped for PostgreSQL.
     @inlinable
     public var quoted: String {
-        "\"\(rawValue)\""
+        "\"\(underlying)\""
     }
 }
 
 // MARK: - FunctionName Extensions
 
-extension Tagged where Tag == Database.Notification.FunctionNameTag, RawValue == String {
+extension Tagged where Tag == Database.Notification.FunctionNameTag, Underlying == String {
     /// Creates a validated function name.
     ///
     /// - Parameter name: The function name to validate
@@ -122,7 +123,7 @@ extension Tagged where Tag == Database.Notification.FunctionNameTag, RawValue ==
                 "Invalid function name '\(name)': must contain only alphanumeric characters, underscores, and hyphens (max 63 chars)"
             )
         }
-        self.init(rawValue: name)
+        self.init(_unchecked: name)
     }
 
     /// Creates a function name from a string literal with runtime validation.
@@ -145,13 +146,13 @@ extension Tagged where Tag == Database.Notification.FunctionNameTag, RawValue ==
     /// The function name quoted for use in SQL statements.
     @inlinable
     public var quoted: String {
-        "\"\(rawValue)\""
+        "\"\(underlying)\""
     }
 }
 
 // MARK: - TriggerName Extensions
 
-extension Tagged where Tag == Database.Notification.TriggerNameTag, RawValue == String {
+extension Tagged where Tag == Database.Notification.TriggerNameTag, Underlying == String {
     /// Creates a validated trigger name.
     ///
     /// - Parameter name: The trigger name to validate
@@ -162,7 +163,7 @@ extension Tagged where Tag == Database.Notification.TriggerNameTag, RawValue == 
                 "Invalid trigger name '\(name)': must contain only alphanumeric characters, underscores, and hyphens (max 63 chars)"
             )
         }
-        self.init(rawValue: name)
+        self.init(_unchecked: name)
     }
 
     /// Creates a trigger name from a string literal with runtime validation.
@@ -185,6 +186,6 @@ extension Tagged where Tag == Database.Notification.TriggerNameTag, RawValue == 
     /// The trigger name quoted for use in SQL statements.
     @inlinable
     public var quoted: String {
-        "\"\(rawValue)\""
+        "\"\(underlying)\""
     }
 }

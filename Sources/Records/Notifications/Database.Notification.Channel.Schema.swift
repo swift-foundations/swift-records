@@ -1,5 +1,5 @@
 import Foundation
-import StructuredQueriesPostgres
+import PostgreSQL_Standard
 
 extension Database.Notification {
     /// A protocol that couples a notification channel with its table and payload type.

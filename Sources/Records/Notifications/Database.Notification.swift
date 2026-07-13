@@ -1,5 +1,5 @@
 import Foundation
-import StructuredQueriesPostgres
+import PostgreSQL_Standard
 
 extension Database {
     /// A notification event with full metadata (channel, payload, backend PID).
@@ -49,7 +49,7 @@ extension Database {
     /// ```swift
     /// // Receive notifications with type-safe channel names
     /// for try await notification in db.notifications(channel: "updates") {
-    ///     print("Channel: \(notification.channel.rawValue)")
+    ///     print("Channel: \(notification.channel.underlying)")
     ///     print("Payload: \(notification.payload)")
     /// }
     /// ```

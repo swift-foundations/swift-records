@@ -1,5 +1,5 @@
 import Foundation
-import StructuredQueriesPostgres
+import PostgreSQL_Standard
 
 extension Database.Notification {
     /// A phantom-typed notification channel that couples a channel name with its payload type.

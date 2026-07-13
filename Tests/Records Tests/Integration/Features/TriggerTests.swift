@@ -1,9 +1,9 @@
 import Dependencies
-import DependenciesTestSupport
+import Dependencies_Test_Support
 import Foundation
 import Records
-import RecordsTestSupport
-import StructuredQueriesPostgres
+import Records_Test_Support
+import PostgreSQL_Standard
 import Testing
 
 @Suite(

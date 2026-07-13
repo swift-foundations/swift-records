@@ -1,7 +1,7 @@
 import Dependencies
-import DependenciesTestSupport
+import Dependencies_Test_Support
 import Foundation
-import RecordsTestSupport
+import Records_Test_Support
 import Testing
 
 @Suite(
@@ -238,7 +238,7 @@ struct DatabaseAccessTests {
                 }
             }
 
-            var values: Set<Int> = []
+            var values: Swift.Set<Int> = []
             for await value in group {
                 values.insert(value)
             }

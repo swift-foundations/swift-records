@@ -1,4 +1,4 @@
-import SnapshotTesting
+import Tests_Apple_Testing_Bridge
 import Testing
 
 /// Top-level umbrella suite for all integration tests that use assertQuery with snapshot testing.

@@ -17,6 +17,11 @@ let package = Package(
         // L2 — institute-native PostgreSQL-dialect DSL (re-exports L1 Structured
         // Queries Primitives). Replaces the pointfreeco swift-structured-queries-postgres fork.
         .package(url: "https://github.com/swift-standards/swift-postgresql-standard.git", branch: "main"),
+        // L1 — identifier/string quoting helpers (FullTextSearch SQL emission).
+        .package(url: "https://github.com/swift-primitives/swift-structured-queries-primitives.git", branch: "main"),
+        // L1 — Tagged functor for type-safe SQL identifiers (ChannelName/FunctionName/
+        // TriggerName). Replaces pointfreeco/swift-tagged.
+        .package(url: "https://github.com/swift-primitives/swift-tagged-primitives.git", branch: "main"),
         // Environment-variable idiom (ServerFoundationEnvVars). Replaces coenttb/swift-environment-variables.
         .package(url: "https://github.com/swift-foundations/swift-server-foundation.git", branch: "main"),
         // Wire execution (PostgresNIO confined to Core/PostgresNIO/ + the config entry points).
@@ -33,6 +38,9 @@ let package = Package(
             name: "Records",
             dependencies: [
                 .product(name: "PostgreSQL Standard", package: "swift-postgresql-standard"),
+                .product(name: "Structured Queries Primitives Support", package: "swift-structured-queries-primitives"),
+                .product(name: "Tagged Primitives", package: "swift-tagged-primitives"),
+                .product(name: "Tagged Primitives Standard Library Integration", package: "swift-tagged-primitives"),
                 .product(name: "PostgresNIO", package: "postgres-nio"),
                 .product(name: "Dependencies", package: "swift-dependencies"),
                 .product(name: "ServerFoundationEnvVars", package: "swift-server-foundation"),

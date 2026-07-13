@@ -1,6 +1,6 @@
 import Dependencies
 import Foundation
-import RecordsTestSupport
+import Records_Test_Support
 import Testing
 
 extension SnapshotIntegrationTests.Execution.Insert {

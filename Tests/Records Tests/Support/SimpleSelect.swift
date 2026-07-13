@@ -1,4 +1,4 @@
-import StructuredQueriesPostgres
+import PostgreSQL_Standard
 
 struct SimpleSelect<QueryValue>: PartialSelectStatement {
     typealias From = Never

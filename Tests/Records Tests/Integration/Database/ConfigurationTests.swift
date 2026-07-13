@@ -1,6 +1,6 @@
 import Dependencies
-import DependenciesTestSupport
-import EnvironmentVariables
+import Dependencies_Test_Support
+import ServerFoundationEnvVars
 import Foundation
 import PostgresNIO
 import Records
@@ -11,9 +11,20 @@ struct ConfigurationTests {
 
     @Test("Configuration from environment variables")
     func testConfigurationFromEnvironment() async throws {
-        let config = try PostgresClient.Configuration.fromEnvironment()
-        // Host can be "localhost" (macOS CI) or "postgres" (Ubuntu CI service name)
-        #expect(config.host == "localhost" || config.host == "postgres")
+        // Inject the environment via the dependency: the test asserts the
+        // env-var → configuration mapping, not the host machine's environment.
+        let config = try withDependencies {
+            $0.envVars = EnvVars([
+                "DATABASE_HOST": "localhost",
+                "DATABASE_PORT": "5432",
+                "DATABASE_NAME": "test_db",
+                "DATABASE_USER": "postgres",
+                "DATABASE_PASSWORD": "secret",
+            ])
+        } operation: {
+            try PostgresClient.Configuration.fromEnvironment()
+        }
+        #expect(config.host == "localhost")
         #expect(config.port == 5432)
         #expect(config.database == "test_db")
         #expect(config.username == "postgres")

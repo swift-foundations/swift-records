@@ -1,7 +1,7 @@
 import Dependencies
 import Records
-import RecordsTestSupport
-import StructuredQueriesPostgres
+import Records_Test_Support
+import PostgreSQL_Standard
 
 /// Convenience wrapper for assertQuery that auto-injects database dependency.
 ///
@@ -38,15 +38,15 @@ func assertQuery<each V: QueryRepresentable, S: Statement<(repeat each V)>>(
     _ query: S,
     sql: (() -> String)? = nil,
     results: (() -> String)? = nil,
-    fileID: StaticString = #fileID,
-    filePath: StaticString = #filePath,
-    function: StaticString = #function,
-    line: UInt = #line,
-    column: UInt = #column
+    fileID: String = #fileID,
+    filePath: String = #filePath,
+    function: String = #function,
+    line: Int = #line,
+    column: Int = #column
 ) async where repeat each V: Sendable, repeat (each V).QueryOutput: Sendable, S: Sendable {
     @Dependency(\.defaultDatabase) var database
 
-    await RecordsTestSupport.assertQuery(
+    await Records_Test_Support.assertQuery(
         query,
         execute: { statement in
             do {

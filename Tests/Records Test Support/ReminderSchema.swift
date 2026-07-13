@@ -1,5 +1,5 @@
 import Foundation
-import StructuredQueriesPostgres
+import PostgreSQL_Standard
 
 // MARK: - Reminder Schema Models
 //
