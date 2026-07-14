@@ -22,8 +22,8 @@ let package = Package(
         // L1 — Tagged functor for type-safe SQL identifiers (ChannelName/FunctionName/
         // TriggerName). Replaces pointfreeco/swift-tagged.
         .package(url: "https://github.com/swift-primitives/swift-tagged-primitives.git", branch: "main"),
-        // Environment-variable idiom (ServerFoundationEnvVars). Replaces coenttb/swift-environment-variables.
-        .package(url: "https://github.com/swift-foundations/swift-server-foundation.git", branch: "main"),
+        // Environment-variable idiom (EnvVars + \.envVars). Formerly ServerFoundationEnvVars (ssf dissolved, W3).
+        .package(url: "https://github.com/swift-foundations/swift-environment-dependencies.git", branch: "main"),
         // Wire execution (PostgresNIO confined to Core/PostgresNIO/ + the config entry points).
         .package(url: "https://github.com/vapor/postgres-nio.git", from: "1.21.0"),
         // Clocks trait matches the transitive requirement (postgresql-standard →
@@ -43,7 +43,7 @@ let package = Package(
                 .product(name: "Tagged Primitives Standard Library Integration", package: "swift-tagged-primitives"),
                 .product(name: "PostgresNIO", package: "postgres-nio"),
                 .product(name: "Dependencies", package: "swift-dependencies"),
-                .product(name: "ServerFoundationEnvVars", package: "swift-server-foundation"),
+                .product(name: "Environment Dependencies", package: "swift-environment-dependencies"),
             ]
         )
     ],

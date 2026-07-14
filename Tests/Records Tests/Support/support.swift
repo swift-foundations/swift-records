@@ -5,7 +5,7 @@
 //  Created by Coen ten Thije Boonkkamp on 25/08/2025.
 //
 
-import ServerFoundationEnvVars
+import Environment_Dependencies
 import Foundation
 import Records_Test_Support
 import Testing

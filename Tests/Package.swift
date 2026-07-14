@@ -11,7 +11,7 @@ let package = Package(
         .package(path: ".."),
         .package(path: "../../swift-tests"),
         .package(path: "../../swift-dependencies", traits: ["Clocks"]),
-        .package(path: "../../swift-server-foundation"),
+        .package(path: "../../swift-environment-dependencies"),
         .package(path: "../../../swift-standards/swift-postgresql-standard"),
         .package(url: "https://github.com/vapor/postgres-nio.git", from: "1.21.0"),
     ],
@@ -25,7 +25,7 @@ let package = Package(
                 .product(name: "Tests Inline Snapshot", package: "swift-tests"),
                 .product(name: "Dependencies", package: "swift-dependencies"),
                 .product(name: "Dependencies Test Support", package: "swift-dependencies"),
-                .product(name: "ServerFoundationEnvVars", package: "swift-server-foundation"),
+                .product(name: "Environment Dependencies", package: "swift-environment-dependencies"),
                 .product(name: "PostgresNIO", package: "postgres-nio"),
             ],
             path: "Records Test Support"
@@ -40,7 +40,7 @@ let package = Package(
                 .product(name: "Tests Apple Testing Bridge", package: "swift-tests"),
                 .product(name: "Dependencies", package: "swift-dependencies"),
                 .product(name: "Dependencies Test Support", package: "swift-dependencies"),
-                .product(name: "ServerFoundationEnvVars", package: "swift-server-foundation"),
+                .product(name: "Environment Dependencies", package: "swift-environment-dependencies"),
                 .product(name: "PostgresNIO", package: "postgres-nio"),
             ],
             path: "Records Tests"
