@@ -26,12 +26,7 @@ let package = Package(
         .package(url: "https://github.com/swift-foundations/swift-environment-dependencies.git", branch: "main"),
         // Wire execution (PostgresNIO confined to Core/PostgresNIO/ + the config entry points).
         .package(url: "https://github.com/vapor/postgres-nio.git", from: "1.21.0"),
-        // Clocks trait matches the transitive requirement (postgresql-standard →
-        // swift-tests → swift-clocks enables it); declaring it here keeps the direct
-        // edge trait-consistent so the trait-conditional `Clock Primitives` product
-        // resolves.
-        .package(url: "https://github.com/swift-foundations/swift-dependencies.git", branch: "main",
-            traits: ["Clocks"]),
+        .package(url: "https://github.com/swift-foundations/swift-dependencies.git", branch: "main"),
     ],
     targets: [
         .target(

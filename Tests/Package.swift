@@ -10,7 +10,7 @@ let package = Package(
     dependencies: [
         .package(path: ".."),
         .package(path: "../../swift-tests"),
-        .package(path: "../../swift-dependencies", traits: ["Clocks"]),
+        .package(path: "../../swift-dependencies"),
         .package(path: "../../swift-environment-dependencies"),
         .package(path: "../../../swift-standards/swift-postgresql-standard"),
         .package(url: "https://github.com/vapor/postgres-nio.git", from: "1.21.0"),
