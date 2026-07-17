@@ -5,7 +5,7 @@ import Records_Test_Support
 import Testing
 
 @Suite(
-    "Concurrency Stress Tests",
+
     .disabled(),  // Disabled by default - enable for manual stress testing
     .serialized,  // Run serially to avoid overwhelming other test suites
     .dependencies {
@@ -13,13 +13,13 @@ import Testing
         $0.defaultDatabase = Database.TestDatabase.withReminderData()
     }
 )
-struct ConcurrencyStressTests {
+struct Test {
     @Dependency(\.defaultDatabase) var db
 
     // MARK: - High Concurrency INSERT Operations
 
-    @Test("Concurrent INSERT operations - 100 parallel")
-    func testConcurrentInserts100() async throws {
+    @Test
+    func `Concurrent INSERT operations - 100 parallel`() async throws {
         let count = 100
 
         // Delete existing test data
@@ -63,8 +63,8 @@ struct ConcurrencyStressTests {
         }
     }
 
-    @Test("Concurrent INSERT operations - 500 parallel (stress test)")
-    func testConcurrentInserts500() async throws {
+    @Test
+    func `Concurrent INSERT operations - 500 parallel (stress test)`() async throws {
         let count = 500
 
         // Delete existing test data
@@ -160,8 +160,8 @@ struct ConcurrencyStressTests {
 
     // MARK: - Mixed Read/Write Operations
 
-    @Test("Concurrent read and write mix - 200 operations")
-    func testConcurrentReadWriteMix() async throws {
+    @Test
+    func `Concurrent read and write mix - 200 operations`() async throws {
         let iterations = 100
 
         // Setup initial data
@@ -219,8 +219,8 @@ struct ConcurrencyStressTests {
 
     // MARK: - Connection Pool Stress
 
-    @Test("Connection pool stress - 500 concurrent requests")
-    func testConnectionPoolStress() async throws {
+    @Test
+    func `Connection pool stress - 500 concurrent requests`() async throws {
         let requests = 500
 
         // All requests should succeed - they queue for available connections
@@ -245,8 +245,8 @@ struct ConcurrencyStressTests {
 
     // MARK: - Concurrent UPDATEs
 
-    @Test("Concurrent UPDATE operations on different records")
-    func testConcurrentUpdatesDifferentRecords() async throws {
+    @Test
+    func `Concurrent UPDATE operations on different records`() async throws {
         // Setup: Insert records to update
         let inserted = try await db.write { db in
             try await Reminder.insert {
@@ -293,8 +293,8 @@ struct ConcurrencyStressTests {
         }
     }
 
-    @Test("Concurrent UPDATE operations on same record - last write wins")
-    func testConcurrentUpdatesSameRecord() async throws {
+    @Test
+    func `Concurrent UPDATE operations on same record - last write wins`() async throws {
         // Setup: Insert one record
         let inserted = try await db.write { db in
             try await Reminder.insert {
@@ -343,8 +343,8 @@ struct ConcurrencyStressTests {
 
     // MARK: - Concurrent DELETEs
 
-    @Test("Concurrent DELETE operations")
-    func testConcurrentDeletes() async throws {
+    @Test
+    func `Concurrent DELETE operations`() async throws {
         // Setup: Insert records to delete
         let inserted = try await db.write { db in
             try await Reminder.insert {
@@ -384,8 +384,8 @@ struct ConcurrencyStressTests {
 
     // MARK: - Transaction Concurrency
 
-    @Test("Concurrent transactions - isolated changes")
-    func testConcurrentTransactions() async throws {
+    @Test
+    func `Concurrent transactions - isolated changes`() async throws {
         let transactionCount = 50
 
         // Delete test data
@@ -431,8 +431,8 @@ struct ConcurrencyStressTests {
 
     // MARK: - Complex Queries Under Load
 
-    @Test("Concurrent complex queries")
-    func testConcurrentComplexQueries() async throws {
+    @Test
+    func `Concurrent complex queries`() async throws {
         let queryCount = 100
 
         await withTaskGroup(of: Void.self) { group in
@@ -458,8 +458,8 @@ struct ConcurrencyStressTests {
 
     // MARK: - Batch Operations
 
-    @Test("Batch INSERT with concurrent readers")
-    func testBatchInsertWithReaders() async throws {
+    @Test
+    func `Batch INSERT with concurrent readers`() async throws {
         let batchSize = 500
         let readerCount = 50
 
@@ -508,8 +508,8 @@ struct ConcurrencyStressTests {
 
     // MARK: - Failure Resilience
 
-    @Test("Concurrent operations with some failures")
-    func testConcurrentOperationsWithFailures() async throws {
+    @Test
+    func `Concurrent operations with some failures`() async throws {
         let totalOps = 100
         let successfulOps = 50
 

@@ -4,17 +4,17 @@ import Records_Test_Support
 import Testing
 
 @Suite(
-    "DELETE Execution Tests",
+
     .dependencies {
         $0.envVars = .development
         $0.defaultDatabase = Database.TestDatabase.withReminderData()
     }
 )
-struct DeleteExecutionTests {
+struct Test {
     @Dependency(\.defaultDatabase) var db
 
-    @Test("DELETE with WHERE clause")
-    func deleteWithWhere() async throws {
+    @Test
+    func `DELETE with WHERE clause`() async throws {
         // Insert test data
         let inserted = try await db.write { db in
             try await Reminder.insert {
@@ -44,8 +44,8 @@ struct DeleteExecutionTests {
         #expect(after == nil)
     }
 
-    @Test("DELETE with RETURNING")
-    func deleteWithReturning() async throws {
+    @Test
+    func `DELETE with RETURNING`() async throws {
         // Insert test data
         let inserted = try await db.write { db in
             try await Reminder.insert {
@@ -76,8 +76,8 @@ struct DeleteExecutionTests {
         #expect(count == 0)
     }
 
-    @Test("DELETE with complex WHERE")
-    func deleteWithComplexWhere() async throws {
+    @Test
+    func `DELETE with complex WHERE`() async throws {
         // Insert test data with specific criteria
         let inserted = try await db.write { db in
             try await Reminder.insert {
@@ -109,8 +109,8 @@ struct DeleteExecutionTests {
         #expect(deleted.count == 1)
     }
 
-    @Test("DELETE with no matches")
-    func deleteNoMatches() async throws {
+    @Test
+    func `DELETE with no matches`() async throws {
         // Try to delete non-existent record
         let deleted = try await db.write { db in
             try await Reminder
@@ -123,8 +123,8 @@ struct DeleteExecutionTests {
         #expect(deleted.count == 0)
     }
 
-    @Test("DELETE with foreign key (cascades)")
-    func deleteWithCascade() async throws {
+    @Test
+    func `DELETE with foreign key (cascades)`() async throws {
         // Insert a new list
         let insertedList = try await db.write { db in
             try await RemindersList.insert {
@@ -167,8 +167,8 @@ struct DeleteExecutionTests {
         #expect(remindersAfter.count == 0)
     }
 
-    @Test("DELETE all records")
-    func deleteAll() async throws {
+    @Test
+    func `DELETE all records`() async throws {
         // Insert test tags with unique titles
         let uniqueSuffix = UUID().uuidString.prefix(8)
         let inserted = try await db.write { db in
@@ -205,8 +205,8 @@ struct DeleteExecutionTests {
     // Would need: DELETE FROM reminders WHERE id IN (SELECT id FROM reminders ORDER BY id LIMIT 1)
     // Skipping this test as it's not a standard DELETE pattern
 
-    @Test("DELETE with enum value")
-    func deleteWithEnum() async throws {
+    @Test
+    func `DELETE with enum value`() async throws {
         // Insert test data with low priority
         let inserted = try await db.write { db in
             try await Reminder.insert {
@@ -234,8 +234,8 @@ struct DeleteExecutionTests {
         #expect(deleted.count == 1)
     }
 
-    @Test("DELETE using find()")
-    func deleteWithFind() async throws {
+    @Test
+    func `DELETE using find()`() async throws {
         // Insert test data
         let inserted = try await db.write { db in
             try await Reminder.insert {
@@ -260,8 +260,8 @@ struct DeleteExecutionTests {
         #expect(reminder == nil)
     }
 
-    @Test("DELETE using find() with sequence")
-    func deleteWithFindSequence() async throws {
+    @Test
+    func `DELETE using find() with sequence`() async throws {
         // Insert test data
         let inserted = try await db.write { db in
             try await Reminder.insert {

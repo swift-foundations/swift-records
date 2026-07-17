@@ -20,13 +20,13 @@ struct DraftTestRecord: Codable, Equatable, Identifiable, Sendable {
 }
 
 @Suite(
-    "Draft Insert Tests",
+
     .dependencies {
         $0.envVars = .development
         $0.defaultDatabase = Database.TestDatabase.withReminderData()
     }
 )
-struct DraftInsertTests {
+struct Test {
     @Dependency(\.defaultDatabase) var database
 
     init() async throws {
@@ -49,8 +49,8 @@ struct DraftInsertTests {
         }
     }
 
-    @Test("Draft insert without ID generates UUID automatically")
-    func testDraftInsertWithoutId() async throws {
+    @Test
+    func `Draft insert without ID generates UUID automatically`() async throws {
         let repositoryId = UUID()
         let hour = Date()
 
@@ -81,8 +81,8 @@ struct DraftInsertTests {
         #expect(insertedRecord?.id != nil)
     }
 
-    @Test("Draft insert with explicit ID uses provided value")
-    func testDraftInsertWithExplicitId() async throws {
+    @Test
+    func `Draft insert with explicit ID uses provided value`() async throws {
         let explicitId = UUID()
         let repositoryId = UUID()
         let hour = Date()
@@ -111,8 +111,8 @@ struct DraftInsertTests {
         #expect(insertedRecord?.notes == nil)
     }
 
-    @Test("Draft insert with ON CONFLICT handles upserts correctly")
-    func testDraftInsertWithConflictResolution() async throws {
+    @Test
+    func `Draft insert with ON CONFLICT handles upserts correctly`() async throws {
         do {
             let repositoryId = UUID()
             let hour = Date()
@@ -171,8 +171,8 @@ struct DraftInsertTests {
         }
     }
 
-    @Test("Multiple Draft inserts without IDs")
-    func testMultipleDraftInserts() async throws {
+    @Test
+    func `Multiple Draft inserts without IDs`() async throws {
         let repositoryId = UUID()
         let baseTime = Date()
 
@@ -223,8 +223,8 @@ struct DraftInsertTests {
         #expect(insertedRecords[2].views == 30)
     }
 
-    @Test("Mixed Draft inserts with and without explicit IDs")
-    func testMixedDraftInserts() async throws {
+    @Test
+    func `Mixed Draft inserts with and without explicit IDs`() async throws {
         do {
             let repositoryId = UUID()
             let explicitId = UUID()
@@ -273,8 +273,8 @@ struct DraftInsertTests {
         }
     }
 
-    @Test("Draft insert SQL does not contain NULL for omitted ID")
-    func testDraftInsertSQLGeneration() async throws {
+    @Test
+    func `Draft insert SQL does not contain NULL for omitted ID`() async throws {
         let repositoryId = UUID()
         let hour = Date()
 
@@ -306,8 +306,8 @@ struct DraftInsertTests {
         print("Generated SQL: \(sql)")
     }
 
-    @Test("Verify NULL primary key columns are filtered out")
-    func testNullPrimaryKeyFiltering() async throws {
+    @Test
+    func `Verify NULL primary key columns are filtered out`() async throws {
         do {
             // This test verifies the core fix - that NULL primary keys
             // are not included in the INSERT column list

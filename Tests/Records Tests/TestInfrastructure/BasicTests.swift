@@ -6,16 +6,16 @@ import Environment_Dependencies
 import Records_Test_Support
 import Testing
 
-@Suite("Basic")
-struct BasicTests {
+@Suite
+struct Test {
     @Test
-    func packageCompiles() async throws {
+    func `Package Compiles`() async throws {
         // This test just verifies the package compiles
         #expect(true)
     }
 
     @Test
-    func configurationFromEnvironment() async throws {
+    func `Configuration From Environment`() async throws {
         // Inject the environment via the dependency: the test asserts the
         // env-var → configuration mapping, not the host machine's environment.
         let config = try withDependencies {
@@ -36,11 +36,11 @@ struct BasicTests {
     }
 }
 
-@Suite("Adapter Tests")
-struct BasicTests2 {
+@Suite
+struct `Adapter Tests` {
 
-    @Test("QueryFragment to PostgresQuery conversion")
-    func testPostgresQuery() {
+    @Test
+    func `Query Fragment to Postgres Query conversion`() {
         let fragment: QueryFragment = """
             SELECT * FROM users WHERE id = \(42) AND name = \(bind: "Alice")
             """
@@ -51,13 +51,13 @@ struct BasicTests2 {
         #expect(query.binds.count == 2)
     }
 
-    @Test("Query decoder initialization")
-    func testQueryDecoder() {
+    @Test
+    func `Query decoder initialization`() {
         #expect(true)
     }
 
-    @Test("QueryFragment with NULL values")
-    func testQueryWithNullValues() {
+    @Test
+    func `Query Fragment with NULL values`() {
         let fragment: QueryFragment = """
             INSERT INTO users (id, name, email) VALUES (\(1), \(bind: "Bob"), \(QueryBinding.null))
             """
@@ -68,8 +68,8 @@ struct BasicTests2 {
         #expect(query.binds.count == 3)
     }
 
-    @Test("QueryFragment with BLOB data")
-    func testQueryWithBlobData() {
+    @Test
+    func `Query Fragment with BLOB data`() {
         let data = Data([0x01, 0x02, 0x03])
         let fragment: QueryFragment = """
             UPDATE files SET content = \(data) WHERE id = \(100)
@@ -81,8 +81,8 @@ struct BasicTests2 {
         #expect(query.binds.count == 2)
     }
 
-    @Test("QueryBindable conformance")
-    func testQueryBindableTypes() {
+    @Test
+    func `Query Bindable conformance`() {
         let intBinding = 42.queryBinding
         #expect(intBinding == .int(42))
 

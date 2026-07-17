@@ -4,12 +4,12 @@ import Testing
 
 @testable import Records
 
-@Suite("README Verification")
-struct ReadmeVerificationTests {
+@Suite
+struct Test {
 
     // README line 247-263: Migration system is mentioned
-    @Test("Example from README: Migrator type exists")
-    func exampleMigratorExists() throws {
+    @Test
+    func `Example from README: Migrator type exists`() throws {
         // Verify the Migrator type from README exists
         var migrator = Database.Migrator()
 
@@ -23,8 +23,8 @@ struct ReadmeVerificationTests {
     }
 
     // README line 96-107: Configuration from README
-    @Test("Example from README: PostgresConfiguration exists")
-    func exampleConfigurationExists() {
+    @Test
+    func `Example from README: Postgres Configuration exists`() {
         // From README line 96-107: Database.Pool configuration
         let config = PostgresConnection.Configuration(
             host: "localhost",
@@ -40,8 +40,8 @@ struct ReadmeVerificationTests {
     }
 
     // README mentions Database.Pool type throughout
-    @Test("Example from README: Database.Pool type exists")
-    func exampleDatabasePoolExists() {
+    @Test
+    func `Example from README: Database.Pool type exists`() {
         // Verify Database.Pool type mentioned in README exists and compiles
         let _: Database.Pool.Type = Database.Pool.self
 

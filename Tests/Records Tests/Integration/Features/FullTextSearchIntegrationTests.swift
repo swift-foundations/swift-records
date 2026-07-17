@@ -8,19 +8,19 @@ import Testing
 // MARK: - Test Suite
 
 @Suite(
-    "Full-Text Search Integration Tests",
+
     .dependencies {
         $0.envVars = .development
         $0.defaultDatabase = Database.TestDatabase.withArticlesFTS()
     }
 )
-struct FullTextSearchIntegrationTests {
+struct Test {
     @Dependency(\.defaultDatabase) var database
 
     // MARK: - Basic Search Operations
 
-    @Test("Search vector is automatically populated on insert")
-    func automaticSearchVectorOnInsert() async throws {
+    @Test
+    func `Search vector is automatically populated on insert`() async throws {
         try await database.withRollback { db in
             // Insert new article
             let inserted = try await Article.insert {
@@ -61,8 +61,8 @@ struct FullTextSearchIntegrationTests {
         }
     }
 
-    @Test("Search vector updates on article update")
-    func automaticSearchVectorOnUpdate() async throws {
+    @Test
+    func `Search vector updates on article update`() async throws {
         try await database.withRollback { db in
             // Insert article
             let inserted = try await Article.insert {
@@ -114,8 +114,8 @@ struct FullTextSearchIntegrationTests {
 
     // MARK: - Full-Text Search Operations
 
-    @Test("Search for articles matching a single term")
-    func searchSingleTerm() async throws {
+    @Test
+    func `Search for articles matching a single term`() async throws {
         do {
             let articles = try await database.read { db in
                 try await Article
@@ -131,8 +131,8 @@ struct FullTextSearchIntegrationTests {
         }
     }
 
-    @Test("Search for articles with multiple terms (AND)")
-    func searchMultipleTermsAND() async throws {
+    @Test
+    func `Search for articles with multiple terms (AND)`() async throws {
         do {
             let articles = try await database.read { db in
                 try await Article
@@ -148,8 +148,8 @@ struct FullTextSearchIntegrationTests {
         }
     }
 
-    @Test("Search for articles with multiple terms (OR)")
-    func searchMultipleTermsOR() async throws {
+    @Test
+    func `Search for articles with multiple terms (OR)`() async throws {
         do {
             let articles = try await database.read { db in
                 try await Article
@@ -169,8 +169,8 @@ struct FullTextSearchIntegrationTests {
         }
     }
 
-    @Test("Search with ranking by relevance")
-    func searchWithRanking() async throws {
+    @Test
+    func `Search with ranking by relevance`() async throws {
         do {
             // Search for "Swift" - appears in 2 articles with different weights
             // "Swift Concurrency Guide" - "Swift" in title (weight A) and body (weight B)
@@ -197,8 +197,8 @@ struct FullTextSearchIntegrationTests {
         }
     }
 
-    @Test("Search articles by author using FTS")
-    func searchByAuthor() async throws {
+    @Test
+    func `Search articles by author using FTS`() async throws {
         do {
             let articles = try await database.read { db in
                 try await Article
@@ -215,8 +215,8 @@ struct FullTextSearchIntegrationTests {
         }
     }
 
-    @Test("Search with phrase query")
-    func searchPhraseQuery() async throws {
+    @Test
+    func `Search with phrase query`() async throws {
         do {
             let articles = try await database.read { db in
                 try await Article
@@ -232,8 +232,8 @@ struct FullTextSearchIntegrationTests {
         }
     }
 
-    @Test("Search returns no results for non-matching term")
-    func searchNoResults() async throws {
+    @Test
+    func `Search returns no results for non-matching term`() async throws {
         do {
             let articles = try await database.read { db in
                 try await Article
@@ -248,8 +248,8 @@ struct FullTextSearchIntegrationTests {
         }
     }
 
-    @Test("Plain text search (safer for user input)")
-    func plainTextSearch() async throws {
+    @Test
+    func `Plain text search (safer for user input)`() async throws {
         do {
             let articles = try await database.read { db in
                 try await Article
@@ -266,8 +266,8 @@ struct FullTextSearchIntegrationTests {
         }
     }
 
-    @Test("Web search syntax")
-    func webSearchSyntax() async throws {
+    @Test
+    func `Web search syntax`() async throws {
         do {
             let articles = try await database.read { db in
                 try await Article
@@ -288,8 +288,8 @@ struct FullTextSearchIntegrationTests {
         }
     }
 
-    @Test("Weighted ranking prioritizes title matches")
-    func weightedRanking() async throws {
+    @Test
+    func `Weighted ranking prioritizes title matches`() async throws {
         do {
             // Search for "Swift" with custom weights favoring title (A) heavily
             // Weights: [D, C, B, A] = [0.1, 0.2, 0.4, 1.0]
@@ -316,8 +316,8 @@ struct FullTextSearchIntegrationTests {
         }
     }
 
-    @Test("Coverage-based ranking for phrase searches")
-    func rankCoverageTest() async throws {
+    @Test
+    func `Coverage-based ranking for phrase searches`() async throws {
         do {
             // Use rank(byCoverage:) which considers proximity and coverage
             let results = try await database.read { db in
@@ -335,8 +335,8 @@ struct FullTextSearchIntegrationTests {
         }
     }
 
-    @Test("Highlight search matches with ts_headline")
-    func highlightMatches() async throws {
+    @Test
+    func `Highlight search matches with ts headline`() async throws {
         do {
             // Search and highlight matches in results
             let results = try await database.read { db in
@@ -374,8 +374,8 @@ struct FullTextSearchIntegrationTests {
         }
     }
 
-    @Test("Column-specific search with toTsvector")
-    func columnSpecificSearch() async throws {
+    @Test
+    func `Column-specific search with to Tsvector`() async throws {
         do {
             // Search only in title using ad-hoc tsvector conversion
             let results = try await database.read { db in
@@ -398,8 +398,8 @@ struct FullTextSearchIntegrationTests {
 
     // MARK: - Query Snapshot Tests
 
-    @Test("Basic match query")
-    func basicMatch() async {
+    @Test
+    func `Basic match query`() async {
         await assertQuery(
             Article
                 .where { $0.match("PostgreSQL") }
@@ -419,8 +419,8 @@ struct FullTextSearchIntegrationTests {
         }
     }
 
-    @Test("Column-specific match query")
-    func columnSpecificMatchSnapshot() async {
+    @Test
+    func `Column-specific match query`() async {
         await assertQuery(
             Article
                 .where { $0.title.match("Swift") }
@@ -443,8 +443,8 @@ struct FullTextSearchIntegrationTests {
         }
     }
 
-    @Test("Rank by query")
-    func rankByQuery() async {
+    @Test
+    func `Rank by query`() async {
         await assertQuery(
             Article
                 .where { $0.match("Swift") }
@@ -467,8 +467,8 @@ struct FullTextSearchIntegrationTests {
         }
     }
 
-    @Test("Rank with custom weights")
-    func rankWithWeights() async {
+    @Test
+    func `Rank with custom weights`() async {
         await assertQuery(
             Article
                 .where { $0.match("Swift") }
@@ -491,8 +491,8 @@ struct FullTextSearchIntegrationTests {
         }
     }
 
-    @Test("Rank with normalization")
-    func rankWithNormalization() async {
+    @Test
+    func `Rank with normalization`() async {
         await assertQuery(
             Article
                 .where { $0.match("Swift") }
@@ -515,8 +515,8 @@ struct FullTextSearchIntegrationTests {
         }
     }
 
-    @Test("Rank by coverage")
-    func rankByCoverage() async {
+    @Test
+    func `Rank by coverage`() async {
         await assertQuery(
             Article
                 .where { $0.match("PostgreSQL") }
@@ -538,8 +538,8 @@ struct FullTextSearchIntegrationTests {
         }
     }
 
-    @Test("WordRange validation")
-    func wordRangeValidation() {
+    @Test
+    func `Word Range validation`() {
         // Valid ranges
         #expect(TextSearch.WordRange(min: 3, max: 10) != nil)
         #expect(TextSearch.WordRange(min: 1, max: 2) != nil)
@@ -563,8 +563,8 @@ struct FullTextSearchIntegrationTests {
         #expect(TextSearch.WordRange.long.max == 50)
     }
 
-    @Test("Headline highlighting")
-    func headlineHighlighting() async {
+    @Test
+    func `Headline highlighting`() async {
         await assertQuery(
             Article
                 .where { $0.match("Swift") }
@@ -597,8 +597,8 @@ struct FullTextSearchIntegrationTests {
         }
     }
 
-    @Test("Select with rank score")
-    func selectWithRank() async {
+    @Test
+    func `Select with rank score`() async {
         await assertQuery(
             Article
                 .where { $0.match("Swift") }
@@ -621,8 +621,8 @@ struct FullTextSearchIntegrationTests {
         }
     }
 
-    @Test("Phrase search")
-    func phraseSearch() async {
+    @Test
+    func `Phrase search`() async {
         await assertQuery(
             Article
                 .where { $0.phraseMatch("web services") }
@@ -642,8 +642,8 @@ struct FullTextSearchIntegrationTests {
         }
     }
 
-    @Test("Plain text search")
-    func plainTextSearch2() async {
+    @Test
+    func `Plain text search`() async {
         await assertQuery(
             Article
                 .where { $0.plainMatch("async await") }
@@ -661,8 +661,8 @@ struct FullTextSearchIntegrationTests {
         }
     }
 
-    @Test("Web search syntax")
-    func webSearchSyntax2() async {
+    @Test
+    func `Web search syntax`() async {
         await assertQuery(
             Article
                 .where { $0.webMatch("Swift OR PostgreSQL") }
@@ -686,8 +686,8 @@ struct FullTextSearchIntegrationTests {
         }
     }
 
-    @Test("Multiple terms with AND operator")
-    func multipleTermsAND() async {
+    @Test
+    func `Multiple terms with AND operator`() async {
         await assertQuery(
             Article
                 .where { $0.match("Swift & patterns") }
@@ -707,8 +707,8 @@ struct FullTextSearchIntegrationTests {
         }
     }
 
-    @Test("Multiple terms with OR operator")
-    func multipleTermsOR() async {
+    @Test
+    func `Multiple terms with OR operator`() async {
         await assertQuery(
             Article
                 .where { $0.match("PostgreSQL | Swift") }
@@ -734,8 +734,8 @@ struct FullTextSearchIntegrationTests {
 
     // MARK: - Edge Case Tests
 
-    @Test("Empty query string returns no results")
-    func emptyQueryString() async throws {
+    @Test
+    func `Empty query string returns no results`() async throws {
         try await database.read { db in
             let results =
                 try await Article
@@ -745,8 +745,8 @@ struct FullTextSearchIntegrationTests {
         }
     }
 
-    @Test("Special characters in delimiters are escaped")
-    func specialCharactersInDelimiters() async throws {
+    @Test
+    func `Special characters in delimiters are escaped`() async throws {
         try await database.read { db in
             // Test with single quotes in delimiters
             let results =
@@ -766,8 +766,8 @@ struct FullTextSearchIntegrationTests {
         }
     }
 
-    @Test("Commas in delimiters are stripped")
-    func commasInDelimiters() async throws {
+    @Test
+    func `Commas in delimiters are stripped`() async throws {
         try await database.read { db in
             // Test with commas in delimiters - they must be removed because PostgreSQL
             // uses commas as option separators and doesn't support escaping them
@@ -788,8 +788,8 @@ struct FullTextSearchIntegrationTests {
         }
     }
 
-    @Test("Unicode characters in search query")
-    func unicodeInSearchQuery() async throws {
+    @Test
+    func `Unicode characters in search query`() async throws {
         try await database.withRollback { db in
             // Insert article with unicode
             try await Article.insert {

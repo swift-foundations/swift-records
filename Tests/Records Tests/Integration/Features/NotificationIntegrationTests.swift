@@ -10,7 +10,7 @@ import Testing
 // MARK: - Suite 1: Basic Operations & Error Handling (10 tests)
 
 @Suite(
-    "PostgreSQL LISTEN/NOTIFY - Basic Operations",
+
     .disabled(),
     .serialized,
     .dependencies {
@@ -18,7 +18,7 @@ import Testing
         $0.defaultDatabase = Database.TestDatabase.withReminderData()
     }
 )
-struct NotificationBasicTests {
+struct Test {
     @Dependency(\.defaultDatabase) var database
 
     struct SimplePayload: Codable, Equatable, Sendable {
@@ -56,7 +56,7 @@ struct NotificationBasicTests {
     }
 
     @Test(
-        "Send and receive notification",
+
         arguments: [
             RoundTripTestCase.simplePayload,
             RoundTripTestCase.emptyPayload,
@@ -140,8 +140,8 @@ struct NotificationBasicTests {
         }
     }
 
-    @Test("Receive multiple notifications on same channel")
-    func multipleNotifications() async throws {
+    @Test
+    func `Receive multiple notifications on same channel`() async throws {
         let channel = try ChannelName(validating: "test_multiple_\(UUID().uuidString)")
         let count = 5
 
@@ -187,7 +187,7 @@ struct NotificationBasicTests {
     }
 
     @Test(
-        "Multiple consumer scenarios",
+
         arguments: [
             ConsumerTestCase.channelIsolation,
             ConsumerTestCase.multipleConsumersSameChannel,
@@ -282,7 +282,7 @@ struct NotificationBasicTests {
     }
 
     @Test(
-        "Stream lifecycle handling",
+
         arguments: [
             (lifecycle: "explicit cancellation", explicitCancel: true, delay: 100),
             (lifecycle: "natural abandonment", explicitCancel: false, delay: 200),
@@ -316,7 +316,7 @@ struct NotificationBasicTests {
     }
 
     @Test(
-        "JSON decoding error handling",
+
         arguments: [
             (sendSubsequent: false, description: "simple decoding error"),
             (
@@ -368,8 +368,8 @@ struct NotificationBasicTests {
         }
     }
 
-    @Test("Escape single quotes in payload")
-    func sqlInjectionProtection() async throws {
+    @Test
+    func `Escape single quotes in payload`() async throws {
         let channel = try ChannelName(validating: "test_injection_\(UUID().uuidString)")
         let payload = SimplePayload(message: "It's a beautiful day, isn't it?")
 
@@ -389,7 +389,7 @@ struct NotificationBasicTests {
     }
 
     @Test(
-        "Notification behavior in transactions",
+
         arguments: [
             (shouldCommit: true, expectedCount: 1, description: "commit"),
             (shouldCommit: false, expectedCount: 0, description: "rollback"),
@@ -447,7 +447,7 @@ struct NotificationBasicTests {
 // MARK: - Suite 2: Edge Cases & Advanced Features (10 tests)
 
 @Suite(
-    "PostgreSQL LISTEN/NOTIFY - Advanced Features",
+
     //    .disabled(),
     .serialized,
     .dependencies {
@@ -455,7 +455,7 @@ struct NotificationBasicTests {
         $0.defaultDatabase = Database.TestDatabase.withReminderData()
     }
 )
-struct NotificationAdvancedTests {
+struct Test {
     @Dependency(\.defaultDatabase) var database
 
     struct SimplePayload: Codable, Equatable, Sendable {
@@ -476,8 +476,8 @@ struct NotificationAdvancedTests {
         let title: String
     }
 
-    @Test("Real-world reminder change notification")
-    func realWorldUseCase() async throws {
+    @Test
+    func `Real-world reminder change notification`() async throws {
         let channel = try ChannelName(validating: "reminder_changes")
         let change = ReminderChange(
             id: 123,
@@ -504,7 +504,7 @@ struct NotificationAdvancedTests {
     }
 
     @Test(
-        "Payload size handling",
+
         arguments: [
             (size: 7985, shouldSucceed: true, description: "Just under limit (8000 - 15 overhead)"),
             (
@@ -556,8 +556,8 @@ struct NotificationAdvancedTests {
         }
     }
 
-    @Test("Buffer overflow - fast producer, slow consumer")
-    func bufferOverflow() async throws {
+    @Test
+    func `Buffer overflow - fast producer, slow consumer`() async throws {
         let channel = try ChannelName(validating: "test_buffer_\(UUID().uuidString)")
 
         let stream = try await database.notifications(on: channel, expecting: SimplePayload.self)
@@ -587,8 +587,8 @@ struct NotificationAdvancedTests {
         }
     }
 
-    @Test("Rapid subscribe/unsubscribe")
-    func rapidSubscribeUnsubscribe() async throws {
+    @Test
+    func `Rapid subscribe/unsubscribe`() async throws {
         for i in 0..<10 {
             let channel = try ChannelName(validating: "test_rapid_\(i)_\(UUID().uuidString)")
             let stream = try await database.notifications(
@@ -607,8 +607,8 @@ struct NotificationAdvancedTests {
         }
     }
 
-    @Test("Empty payload string")
-    func emptyPayloadString() async throws {
+    @Test
+    func `Empty payload string`() async throws {
         let channel = try ChannelName(validating: "test_empty_\(UUID().uuidString)")
 
         let stream = try await database.notifications(on: channel, expecting: EmptyPayload.self)
@@ -632,8 +632,8 @@ struct NotificationAdvancedTests {
         }
     }
 
-    @Test("NotificationEvent stream includes metadata")
-    func notificationEventMetadata() async throws {
+    @Test
+    func `Notification Event stream includes metadata`() async throws {
         let channel = try ChannelName(validating: "test_metadata_\(UUID().uuidString)")
         let payload = SimplePayload(message: "Test")
 

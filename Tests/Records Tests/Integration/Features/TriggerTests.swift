@@ -7,13 +7,13 @@ import PostgreSQL_Standard
 import Testing
 
 @Suite(
-    "Trigger Tests",
+
     .dependencies {
         $0.envVars = .development
         $0.defaultDatabase = Database.TestDatabase.withReminderData()
     }
 )
-struct TriggerTests {
+struct Test {
     @Dependency(\.defaultDatabase) var db
 
     // MARK: - Setup
@@ -54,8 +54,8 @@ struct TriggerTests {
 
     // MARK: - Simple Trigger Tests
 
-    @Test("Basic insert trigger sets default position")
-    func testInsertTrigger() async throws {
+    @Test
+    func `Basic insert trigger sets default position`() async throws {
         try await setup()
         defer { Task { try? await cleanup() } }
 
@@ -105,7 +105,7 @@ struct TriggerTests {
         #expect(items[2].position == 3)
     }
 
-    //    @Test("Update trigger increments counter")
+    //    @Test
     //    func testUpdateTrigger() async throws {
     //        try await setup()
     //        defer { Task { try? await cleanup() } }
@@ -157,7 +157,7 @@ struct TriggerTests {
     //        #expect(item?.updateCount == 3, "Should have been updated 3 times")
     //    }
 
-    //    @Test("Delete trigger logs deletions")
+    //    @Test
     //    func testDeleteTrigger() async throws {
     //        try await setup()
     //        defer { Task { try? await cleanup() } }

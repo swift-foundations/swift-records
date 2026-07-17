@@ -5,13 +5,13 @@ import PostgreSQL_Standard
 import Testing
 
 @Suite(
-    "Transaction & Savepoint Tests",
+
     .dependencies {
         $0.envVars = .development
         $0.defaultDatabase = Database.TestDatabase.withReminderData()
     }
 )
-struct TransactionTests {
+struct Test {
     @Dependency(\.defaultDatabase) var db
 
     // MARK: - Test Tables
@@ -72,8 +72,8 @@ struct TransactionTests {
 
     // MARK: - Basic Transaction Tests
 
-    @Test("Basic transaction commit")
-    func testBasicTransactionCommit() async throws {
+    @Test
+    func `Basic transaction commit`() async throws {
         // Clear existing data
         try await db.write { db in
             try await db.execute("DELETE FROM test_transactions")
@@ -102,8 +102,8 @@ struct TransactionTests {
         #expect(count == 1)
     }
 
-    @Test("Basic transaction rollback")
-    func testBasicTransactionRollback() async throws {
+    @Test
+    func `Basic transaction rollback`() async throws {
         // Clear existing data
         try await db.write { db in
             try await db.execute("DELETE FROM test_accounts")
@@ -136,8 +136,8 @@ struct TransactionTests {
 
     // MARK: - Savepoint Tests
 
-    @Test("Savepoint with auto-generated name")
-    func testSavepointAutoName() async throws {
+    @Test
+    func `Savepoint with auto-generated name`() async throws {
         // Clear existing data
         try await db.write { db in
             try await db.execute("DELETE FROM test_accounts")
@@ -190,8 +190,8 @@ struct TransactionTests {
         #expect(accounts[1].name == "Account 3")
     }
 
-    @Test("Named savepoint")
-    func testNamedSavepoint() async throws {
+    @Test
+    func `Named savepoint`() async throws {
         // Clear existing data
         try await db.write { db in
             try await db.execute("DELETE FROM test_accounts")
@@ -224,8 +224,8 @@ struct TransactionTests {
 
     // MARK: - Nested Transaction Tests
 
-    @Test("Nested transactions with savepoints")
-    func testNestedTransactions() async throws {
+    @Test
+    func `Nested transactions with savepoints`() async throws {
         // Clear existing data - delete in correct order due to foreign key constraints
         try await db.write { db in
             try await db.execute("DELETE FROM test_transactions")
@@ -303,8 +303,8 @@ struct TransactionTests {
         #expect(transactions[2].description == "Success after failure")
     }
 
-    @Test("Nested transaction isolation")
-    func testNestedTransactionIsolation() async throws {
+    @Test
+    func `Nested transaction isolation`() async throws {
         // Clear existing data
         try await db.write { db in
             try await db.execute("DELETE FROM test_accounts")
@@ -373,8 +373,8 @@ struct TransactionTests {
 
     // MARK: - Error Handling Tests
 
-    @Test("Multiple savepoint rollbacks")
-    func testMultipleSavepointRollbacks() async throws {
+    @Test
+    func `Multiple savepoint rollbacks`() async throws {
         // Clear existing data
         try await db.write { db in
             try await db.execute("DELETE FROM test_accounts")
@@ -419,8 +419,8 @@ struct TransactionTests {
 
     // MARK: - Performance Tests
 
-    @Test("Nested transaction performance")
-    func testNestedTransactionPerformance() async throws {
+    @Test
+    func `Nested transaction performance`() async throws {
         // Clear existing data
         try await db.write { db in
             try await db.execute("DELETE FROM test_accounts")

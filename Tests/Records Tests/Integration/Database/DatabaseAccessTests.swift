@@ -5,17 +5,17 @@ import Records_Test_Support
 import Testing
 
 @Suite(
-    "Database Access Patterns",
+
     .dependencies {
         $0.envVars = .development
         $0.defaultDatabase = Database.TestDatabase.withReminderData()
     }
 )
-struct DatabaseAccessTests {
+struct Test {
     @Dependency(\.defaultDatabase) var database
 
-    @Test("Database.Queue serializes all operations")
-    func testDatabaseQueueSerializesAccess() async throws {
+    @Test
+    func `Database.Queue serializes all operations`() async throws {
         // Test that operations are serialized
         let results = await withTaskGroup(of: Int?.self) { group in
             for i in 1...10 {
@@ -42,7 +42,7 @@ struct DatabaseAccessTests {
     }
 
     @Test(
-        "Database.Pool allows concurrent reads",
+
         .disabled("only run in isolation for proper results")
     )
     func testDatabasePoolAllowsConcurrentReads() async throws {
@@ -84,8 +84,8 @@ struct DatabaseAccessTests {
         #expect(readTimes.count == 5)
     }
 
-    @Test("Database.Pool serializes write operations")
-    func testDatabasePoolSerializesWrites() async throws {
+    @Test
+    func `Database.Pool serializes write operations`() async throws {
         do {
             // Start with known sample data (6 reminders from withReminderData)
             let initialCount = try await database.read { db in
@@ -147,8 +147,8 @@ struct DatabaseAccessTests {
         }
     }
 
-    @Test("Read and write operations don't interfere")
-    func testReadWriteIsolation() async throws {
+    @Test
+    func `Read and write operations don't interfere`() async throws {
         do {
             // Start with known state
             let initialCount = try await database.read { db in
@@ -209,8 +209,8 @@ struct DatabaseAccessTests {
         }
     }
 
-    @Test("Actor-based concurrency handles multiple operations")
-    func testActorBasedConcurrency() async throws {
+    @Test
+    func `Actor-based concurrency handles multiple operations`() async throws {
         // Test that our actor-based approach handles concurrent access correctly
         actor Counter {
             var value = 0

@@ -12,19 +12,19 @@ import Testing
 /// Most trigger functionality is tested in swift-structured-queries-postgres.
 /// These tests focus on Records-specific integration.
 @Suite(
-    "Trigger Integration Tests",
+
     .dependencies {
         $0.envVars = .development
         $0.defaultDatabase = Database.TestDatabase.withTriggerTestTables()
     }
 )
-struct TriggerIntegrationTests {
+struct Test {
     @Dependency(\.defaultDatabase) var db
 
     // MARK: - Basic Trigger Function Tests
 
-    @Test("Create trigger function using low-level helper")
-    func testCreateTriggerFunction() async throws {
+    @Test
+    func `Create trigger function using low-level helper`() async throws {
         try await db.withRollback { db in
             // Use the low-level helper from Database.Connection.Protocol
             try await db.createTriggerFunction(
@@ -65,8 +65,8 @@ struct TriggerIntegrationTests {
         }
     }
 
-    @Test("Trigger function executes on INSERT")
-    func testTriggerOnInsert() async throws {
+    @Test
+    func `Trigger function executes on INSERT`() async throws {
         try await db.withRollback { db in
             // Create function that sets slug from title
             try await db.createTriggerFunction(
@@ -100,8 +100,8 @@ struct TriggerIntegrationTests {
         }
     }
 
-    @Test("Trigger function executes on DELETE")
-    func testTriggerOnDelete() async throws {
+    @Test
+    func `Trigger function executes on DELETE`() async throws {
         try await db.withRollback { db in
             // Create audit log table
             try await db.execute(
@@ -155,8 +155,8 @@ struct TriggerIntegrationTests {
         }
     }
 
-    @Test("Multiple triggers execute in order")
-    func testMultipleTriggers() async throws {
+    @Test
+    func `Multiple triggers execute in order`() async throws {
         try await db.withRollback { db in
             // Create first trigger (appends '1')
             try await db.createTriggerFunction(
@@ -207,8 +207,8 @@ struct TriggerIntegrationTests {
         }
     }
 
-    @Test("Trigger can prevent operation by raising exception")
-    func testTriggerRaisesException() async throws {
+    @Test
+    func `Trigger can prevent operation by raising exception`() async throws {
         try await db.withRollback { db in
             // Create function that always fails
             try await db.createTriggerFunction(
@@ -246,8 +246,8 @@ struct TriggerIntegrationTests {
         }
     }
 
-    @Test("BEFORE trigger can modify NEW row")
-    func testBeforeTriggerModifiesRow() async throws {
+    @Test
+    func `BEFORE trigger can modify NEW row`() async throws {
         try await db.withRollback { db in
             // Create function that forces title to uppercase
             try await db.createTriggerFunction(
@@ -280,8 +280,8 @@ struct TriggerIntegrationTests {
         }
     }
 
-    @Test("DROP FUNCTION with CASCADE removes dependent triggers")
-    func testDropFunctionCascade() async throws {
+    @Test
+    func `DROP FUNCTION with CASCADE removes dependent triggers`() async throws {
         try await db.withRollback { db in
             // Create function and trigger
             try await db.createTriggerFunction(

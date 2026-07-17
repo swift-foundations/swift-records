@@ -5,7 +5,7 @@ import Records_Test_Support
 import Testing
 
 @Suite(
-    "Statement Extensions New",
+
     .dependencies {
         $0.envVars = .development
         $0.defaultDatabase = Database.TestDatabase.withReminderData()
@@ -14,8 +14,8 @@ import Testing
 struct StatementExtensionTestsNew {
     @Dependency(\.defaultDatabase) var database
 
-    @Test("Statement.execute(db) works correctly")
-    func testStatementExecute() async throws {
+    @Test
+    func `Statement.execute(db) works correctly`() async throws {
         do {
             // Test execute with insert statement
             try await database.write { db in
@@ -40,8 +40,8 @@ struct StatementExtensionTestsNew {
         }
     }
 
-    @Test("Statement.fetchAll(db) returns all results")
-    func testStatementFetchAll() async throws {
+    @Test
+    func `Statement.fetch All(db) returns all results`() async throws {
         // Sample data already loaded by withReminderData()
 
         // Test fetchAll using static method
@@ -54,8 +54,8 @@ struct StatementExtensionTestsNew {
         #expect(reminders.contains { $0.title == "Finish report" })
     }
 
-    @Test("Statement.fetchOne(db) returns single result")
-    func testStatementFetchOne() async throws {
+    @Test
+    func `Statement.fetch One(db) returns single result`() async throws {
         // Sample data already loaded by withReminderData()
 
         // Test fetchOne
@@ -70,8 +70,8 @@ struct StatementExtensionTestsNew {
         #expect(reminder?.notes == "Milk, Eggs, Apples")
     }
 
-    @Test("SelectStatement.fetchCount(db) returns count")
-    func testSelectStatementFetchCount() async throws {
+    @Test
+    func `Select Statement.fetch Count(db) returns count`() async throws {
         // Sample data already loaded by withReminderData()
 
         // Test fetchCount using static method
@@ -92,8 +92,8 @@ struct StatementExtensionTestsNew {
         #expect(filteredCount == 2)  // Haircut and Team meeting are flagged
     }
 
-    @Test("Table.all pattern works correctly")
-    func testTableAllPattern() async throws {
+    @Test
+    func `Table.all pattern works correctly`() async throws {
         // Sample data already loaded by withReminderData()
 
         // Test the Table.all pattern from SharingGRDB
@@ -114,8 +114,8 @@ struct StatementExtensionTestsNew {
         #expect(allTags.count == 4)
     }
 
-    @Test("Complex queries with where clauses")
-    func testComplexQueries() async throws {
+    @Test
+    func `Complex queries with where clauses`() async throws {
         // Sample data already loaded by withReminderData()
 
         // Test complex query with where and order
@@ -142,8 +142,8 @@ struct StatementExtensionTestsNew {
         #expect(specificReminder?.id == 1)
     }
 
-    @Test("Update and delete operations")
-    func testUpdateAndDelete() async throws {
+    @Test
+    func `Update and delete operations`() async throws {
         // Sample data already loaded by withReminderData()
 
         // Test update

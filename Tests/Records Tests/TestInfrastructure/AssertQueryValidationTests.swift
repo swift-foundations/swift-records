@@ -5,14 +5,14 @@ import Tests_Apple_Testing_Bridge
 import Testing
 
 @Suite(
-    "assertQuery Validation",
+
     .snapshots(record: .never),
     .dependencies {
         $0.envVars = .development
         $0.defaultDatabase = Database.TestDatabase.withReminderData()
     }
 )
-struct AssertQueryValidationTests {
+struct Test {
     @Dependency(\.defaultDatabase) var db
 
     @Test func simpleSelectWithExplicitExecute() async {

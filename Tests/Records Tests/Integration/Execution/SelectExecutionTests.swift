@@ -5,17 +5,17 @@ import Testing
 
 extension SnapshotIntegrationTests.Execution.Select {
     @Suite(
-        "SELECT Execution Tests",
+
         .dependencies {
             $0.envVars = .development
             $0.defaultDatabase = Database.TestDatabase.withReminderData()
         }
     )
-    struct SelectExecutionTests {
+    struct Test {
         @Dependency(\.defaultDatabase) var db
 
-        @Test("SELECT all records returns correct count and data")
-        func selectAll() async {
+        @Test
+        func `SELECT all records returns correct count and data`() async {
             await assertQuery(
                 Reminder.all.select { ($0.id, $0.title) }.order(by: \.id),
                 sql: {
@@ -40,8 +40,8 @@ extension SnapshotIntegrationTests.Execution.Select {
             )
         }
 
-        @Test("SELECT with WHERE clause returns correct data")
-        func selectWithWhere() async {
+        @Test
+        func `SELECT with WHERE clause returns correct data`() async {
             await assertQuery(
                 Reminder.where { $0.isCompleted }.select { ($0.id, $0.title, $0.isCompleted) }
                     .order(
@@ -65,8 +65,8 @@ extension SnapshotIntegrationTests.Execution.Select {
             )
         }
 
-        @Test("SELECT specific columns returns correct data")
-        func selectColumns() async {
+        @Test
+        func `SELECT specific columns returns correct data`() async {
             await assertQuery(
                 Reminder.select { $0.title }.order(by: \.title),
                 sql: {
@@ -91,8 +91,8 @@ extension SnapshotIntegrationTests.Execution.Select {
             )
         }
 
-        @Test("SELECT with ORDER BY returns correctly ordered data")
-        func selectWithOrderBy() async {
+        @Test
+        func `SELECT with ORDER BY returns correctly ordered data`() async {
             await assertQuery(
                 Reminder.all.select { ($0.id, $0.title) }.order(by: \.title),
                 sql: {
@@ -117,8 +117,8 @@ extension SnapshotIntegrationTests.Execution.Select {
             )
         }
 
-        @Test("SELECT with LIMIT returns correct number of records")
-        func selectWithLimit() async {
+        @Test
+        func `SELECT with LIMIT returns correct number of records`() async {
             await assertQuery(
                 Reminder.all.select { ($0.id, $0.title) }.order(by: \.id).limit(3),
                 sql: {
@@ -141,8 +141,8 @@ extension SnapshotIntegrationTests.Execution.Select {
             )
         }
 
-        @Test("SELECT with LIMIT and OFFSET")
-        func selectWithLimitOffset() async throws {
+        @Test
+        func `SELECT with LIMIT and OFFSET`() async throws {
             let all = try await db.read { db in
                 try await Reminder.all.order(by: \.id).fetchAll(db)
             }
@@ -153,8 +153,8 @@ extension SnapshotIntegrationTests.Execution.Select {
             #expect(offset.first?.id == all[2].id)
         }
 
-        @Test("SELECT with NULL checks returns correct data")
-        func selectWithNullChecks() async {
+        @Test
+        func `SELECT with NULL checks returns correct data`() async {
             await assertQuery(
                 Reminder.where { $0.assignedUserID == nil }.select {
                     ($0.id, $0.title, $0.assignedUserID)
@@ -180,8 +180,8 @@ extension SnapshotIntegrationTests.Execution.Select {
             )
         }
 
-        @Test("SELECT with IN clause returns correct data")
-        func selectWithIn() async {
+        @Test
+        func `SELECT with IN clause returns correct data`() async {
             let priorities: [Priority?] = [.low, .high]
             await assertQuery(
                 Reminder.where { $0.priority.in(priorities) }.select {
@@ -208,8 +208,8 @@ extension SnapshotIntegrationTests.Execution.Select {
             )
         }
 
-        @Test("SELECT with LIKE pattern returns correct data")
-        func selectWithLike() async {
+        @Test
+        func `SELECT with LIKE pattern returns correct data`() async {
             await assertQuery(
                 Reminder.where { $0.title.ilike("%e%") }.select { ($0.id, $0.title) }.order(
                     by: \.id
@@ -237,12 +237,12 @@ extension SnapshotIntegrationTests.Execution.Select {
         }
 
         // TODO: Tuple selection not yet supported - need to rewrite using proper result type
-        // @Test("SELECT with JOIN")
-        // @Test("SELECT with GROUP BY and aggregate")
-        // @Test("SELECT with HAVING clause")
+        // @Test
+        // @Test
+        // @Test
 
-        @Test("SELECT with boolean operators")
-        func selectWithBooleanOperators() async throws {
+        @Test
+        func `SELECT with boolean operators`() async throws {
             let results = try await db.read { db in
                 try await Reminder
                     .where { $0.isCompleted || $0.isFlagged }
@@ -252,8 +252,8 @@ extension SnapshotIntegrationTests.Execution.Select {
             #expect(results.allSatisfy { $0.isCompleted || $0.isFlagged })
         }
 
-        @Test("SELECT with enum comparison")
-        func selectWithEnum() async throws {
+        @Test
+        func `SELECT with enum comparison`() async throws {
             let high = try await db.read { db in
                 try await Reminder.where { $0.priority == Priority.high }.fetchAll(db)
             }
@@ -261,16 +261,16 @@ extension SnapshotIntegrationTests.Execution.Select {
             #expect(high.first?.priority == .high)
         }
 
-        @Test("SELECT with DISTINCT")
-        func selectDistinct() async throws {
+        @Test
+        func `SELECT with DISTINCT`() async throws {
             let distinctLists = try await db.read { db in
                 try await Reminder.distinct().select { $0.remindersListID }.fetchAll(db)
             }
             #expect(distinctLists.count == 2)
         }
 
-        @Test("SELECT with computed column")
-        func selectWithComputedColumn() async throws {
+        @Test
+        func `SELECT with computed column`() async throws {
             let highPriority = try await db.read { db in
                 try await Reminder.where { $0.isHighPriority }.fetchAll(db)
             }
@@ -278,8 +278,8 @@ extension SnapshotIntegrationTests.Execution.Select {
             #expect(highPriority.first?.priority == .high)
         }
 
-        @Test("fetchOne returns correct single record")
-        func fetchOne() async {
+        @Test
+        func `Fetch One returns correct single record`() async {
             await assertQuery(
                 Reminder.where { $0.id == 1 }.select { ($0.id, $0.title) },
                 sql: {
@@ -299,16 +299,16 @@ extension SnapshotIntegrationTests.Execution.Select {
             )
         }
 
-        @Test("fetchOne returns nil when no match")
-        func fetchOneNoMatch() async throws {
+        @Test
+        func `Fetch One returns nil when no match`() async throws {
             let reminder = try await db.read { db in
                 try await Reminder.where { $0.id == 999 }.fetchOne(db)
             }
             #expect(reminder == nil)
         }
 
-        @Test("SELECT with find()")
-        func selectWithFind() async throws {
+        @Test
+        func `SELECT with find()`() async throws {
             let reminder = try await db.read { db in
                 try await Reminder.find(1).fetchOne(db)
             }
@@ -316,8 +316,8 @@ extension SnapshotIntegrationTests.Execution.Select {
             #expect(reminder?.id == 1)
         }
 
-        @Test("SELECT with find() sequence")
-        func selectWithFindSequence() async throws {
+        @Test
+        func `SELECT with find() sequence`() async throws {
             let reminders = try await db.read { db in
                 try await Reminder.find([1, 2, 3]).fetchAll(db)
             }

@@ -8,18 +8,18 @@ import Testing
 /// Integration tests for JSONB with database execution
 /// Tests round-trip encoding/decoding through PostgreSQL
 @Suite(
-    "JSONB Integration Tests",
+
     .dependencies {
         $0.envVars = .development
         $0.defaultDatabase = Database.TestDatabase.withReminderData()
     }
 )
-struct JSONBTests {
+struct Test {
 
     @Dependency(\.defaultDatabase) var db
 
-    @Test("Insert and retrieve JSONB data")
-    func testInsertAndRetrieveJSONB() async throws {
+    @Test
+    func `Insert and retrieve JSONB data`() async throws {
         try await db.write { db in
             // Create the test table
             try await db.execute(
@@ -61,8 +61,8 @@ struct JSONBTests {
         }
     }
 
-    @Test("Update JSONB columns")
-    func testUpdateJSONB() async throws {
+    @Test
+    func `Update JSONB columns`() async throws {
         do {
             try await db.write { db in
                 // Create the test table
@@ -115,8 +115,8 @@ struct JSONBTests {
         }
     }
 
-    @Test("JSONB with empty arrays and dictionaries")
-    func testEmptyJSONB() async throws {
+    @Test
+    func `JSONB with empty arrays and dictionaries`() async throws {
         do {
             try await db.write { db in
                 // Create the test table
@@ -157,8 +157,8 @@ struct JSONBTests {
         }
     }
 
-    @Test("JSONB with special characters")
-    func testJSONBSpecialCharacters() async throws {
+    @Test
+    func `JSONB with special characters`() async throws {
         do {
             try await db.write { db in
                 // Create the test table
@@ -206,8 +206,8 @@ struct JSONBTests {
         }
     }
 
-    @Test("JSONB with optional columns")
-    func testOptionalJSONB() async throws {
+    @Test
+    func `JSONB with optional columns`() async throws {
         do {
             try await db.write { db in
                 // Create the table

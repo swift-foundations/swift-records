@@ -9,19 +9,19 @@ import Testing
 
 extension SnapshotIntegrationTests.Features.JSONB {
     @Suite(
-        "JSONB Integration Tests",
+
         .dependencies {
             $0.envVars = .development
             $0.defaultDatabase = Database.TestDatabase.withJSONB()
         }
     )
-    struct JSONBIntegrationTests {
+    struct Test {
         @Dependency(\.defaultDatabase) var database
 
         // MARK: - Basic JSONB Operations
 
-        @Test("Insert and retrieve JSONB data")
-        func insertAndRetrieveJSONB() async throws {
+        @Test
+        func `Insert and retrieve JSONB data`() async throws {
             try await database.withRollback { db in
                 // Insert user with JSONB settings (using proper Codable structs)
                 let settings = UserSettings(
@@ -60,8 +60,8 @@ extension SnapshotIntegrationTests.Features.JSONB {
 
         // MARK: - Containment Operators
 
-        @Test("JSONB contains operator (@>)")
-        func jsonbContains() async throws {
+        @Test
+        func `JSONB contains operator (@>)`() async throws {
             try await database.withRollback { db in
                 // Find users with dark theme
                 let darkThemeUsers =
@@ -74,8 +74,8 @@ extension SnapshotIntegrationTests.Features.JSONB {
             }
         }
 
-        @Test("JSONB is contained by operator (<@)")
-        func jsonbIsContained() async throws {
+        @Test
+        func `JSONB is contained by operator (<@)`() async throws {
             try await database.withRollback { db in
                 // Find users whose settings are a subset of the given object
                 struct Subset: Encodable {
@@ -102,8 +102,8 @@ extension SnapshotIntegrationTests.Features.JSONB {
 
         // MARK: - Key Existence Operators
 
-        @Test("JSONB has key operator (?)")
-        func jsonbHasKey() async throws {
+        @Test
+        func `JSONB has key operator (?)`() async throws {
             try await database.withRollback { db in
                 // Find users with notifications setting
                 let usersWithNotifications =
@@ -116,8 +116,8 @@ extension SnapshotIntegrationTests.Features.JSONB {
             }
         }
 
-        @Test("JSONB has any keys operator (?|)")
-        func jsonbHasAnyKeys() async throws {
+        @Test
+        func `JSONB has any keys operator (?|)`() async throws {
             try await database.withRollback { db in
                 // Find users with either theme or color_scheme setting
                 let users =
@@ -129,8 +129,8 @@ extension SnapshotIntegrationTests.Features.JSONB {
             }
         }
 
-        @Test("JSONB has all keys operator (?&)")
-        func jsonbHasAllKeys() async throws {
+        @Test
+        func `JSONB has all keys operator (?&)`() async throws {
             try await database.withRollback { db in
                 // Find users with both theme AND language settings
                 let users =
@@ -145,8 +145,8 @@ extension SnapshotIntegrationTests.Features.JSONB {
 
         // MARK: - Field Extraction
 
-        @Test("Extract JSONB field as JSON (->)")
-        func extractFieldAsJSON() async throws {
+        @Test
+        func `Extract JSONB field as JSON (->)`() async throws {
             try await database.read { db in
                 let results =
                     try await UserProfile
@@ -166,8 +166,8 @@ extension SnapshotIntegrationTests.Features.JSONB {
             }
         }
 
-        @Test("Extract JSONB field as text (->>)")
-        func extractFieldAsText() async throws {
+        @Test
+        func `Extract JSONB field as text (->>)`() async throws {
             try await database.read { db in
                 let results =
                     try await UserProfile
@@ -182,8 +182,8 @@ extension SnapshotIntegrationTests.Features.JSONB {
             }
         }
 
-        @Test("Extract nested JSONB fields")
-        func extractNestedFields() async throws {
+        @Test
+        func `Extract nested JSONB fields`() async throws {
             try await database.read { db in
                 // Extract nested field: metadata -> stats -> visits
                 let results =
@@ -201,8 +201,8 @@ extension SnapshotIntegrationTests.Features.JSONB {
             }
         }
 
-        @Test("Extract JSONB array element (-> with index)")
-        func extractArrayElement() async throws {
+        @Test
+        func `Extract JSONB array element (-> with index)`() async throws {
             try await database.withRollback { db in
                 // Create temporary table for this test
                 try await db.execute(
@@ -248,8 +248,8 @@ extension SnapshotIntegrationTests.Features.JSONB {
             }
         }
 
-        @Test("Extract value at path (#>, #>>)")
-        func extractValueAtPath() async throws {
+        @Test
+        func `Extract value at path (#>, #>>)`() async throws {
             try await database.read { db in
                 // Extract value at path: metadata -> stats -> visits
                 let resultsAsJSON =
@@ -284,7 +284,7 @@ extension SnapshotIntegrationTests.Features.JSONB {
         //
         // See JSONB_IMPROVEMENTS.md for details on this architectural limitation.
 
-        // @Test("Concatenate JSONB values (||)")
+        // @Test
         // func concatenateJSONB() async throws {
         //     // ❌ This pattern doesn't work: user.settings returns UserSettings (not TableColumn)
         //     try await database.withRollback { db in
@@ -297,8 +297,8 @@ extension SnapshotIntegrationTests.Features.JSONB {
         //     }
         // }
 
-        @Test("Remove key from JSONB (-)")
-        func removeKeyFromJSONB() async throws {
+        @Test
+        func `Remove key from JSONB (-)`() async throws {
             try await database.withRollback { db in
                 // For now, skip this test due to update API limitations
                 // The JSONB removing operations work in SELECT but need
@@ -308,8 +308,8 @@ extension SnapshotIntegrationTests.Features.JSONB {
             }
         }
 
-        @Test("Remove multiple keys from JSONB")
-        func removeMultipleKeys() async throws {
+        @Test
+        func `Remove multiple keys from JSONB`() async throws {
             try await database.withRollback { db in
                 // TODO: Currently has type inference issues with update operations
                 // Remove multiple keys
@@ -325,8 +325,8 @@ extension SnapshotIntegrationTests.Features.JSONB {
             }
         }
 
-        @Test("Remove field at path (#-)")
-        func removeFieldAtPath() async throws {
+        @Test
+        func `Remove field at path (#-)`() async throws {
             try await database.withRollback { db in
                 // TODO: Currently has type inference issues with update operations
                 // Remove nested field
@@ -344,8 +344,8 @@ extension SnapshotIntegrationTests.Features.JSONB {
 
         // MARK: - JSONB Functions
 
-        @Test("Set JSONB value at path (jsonb_set)")
-        func setValueAtPath() async throws {
+        @Test
+        func `Set JSONB value at path (jsonb set)`() async throws {
             try await database.withRollback { db in
                 // TODO: Currently has type inference issues with update operations
                 // Set nested value
@@ -361,8 +361,8 @@ extension SnapshotIntegrationTests.Features.JSONB {
             }
         }
 
-        @Test("Insert into JSONB array (jsonb_insert)")
-        func insertIntoJSONBArray() async throws {
+        @Test
+        func `Insert into JSONB array (jsonb insert)`() async throws {
             try await database.withRollback { db in
                 // Create temporary table for this test
                 try await db.execute(
@@ -415,8 +415,8 @@ extension SnapshotIntegrationTests.Features.JSONB {
             }
         }
 
-        @Test("Strip nulls from JSONB (jsonb_strip_nulls)")
-        func stripNullsFromJSONB() async throws {
+        @Test
+        func `Strip nulls from JSONB (jsonb strip nulls)`() async throws {
             try await database.withRollback { db in
                 // Create temporary table for this test
                 try await db.execute(
@@ -467,7 +467,7 @@ extension SnapshotIntegrationTests.Features.JSONB {
             }
         }
 
-        //    @Test("Get JSONB type (jsonb_typeof)")
+        //    @Test
         //    func getJSONBType() async throws {
         //        try await database.read { db in
         //            let results = try await UserProfile
@@ -482,7 +482,7 @@ extension SnapshotIntegrationTests.Features.JSONB {
         //        }
         //    }
         //
-        //    @Test("Pretty format JSONB (jsonb_pretty)")
+        //    @Test
         //    func prettyFormatJSONB() async throws {
         //        try await database.read { db in
         //            let results = try await UserProfile
@@ -498,8 +498,8 @@ extension SnapshotIntegrationTests.Features.JSONB {
 
         // MARK: - Complex Queries
 
-        @Test("Complex JSONB query with multiple conditions")
-        func complexJSONBQuery() async throws {
+        @Test
+        func `Complex JSONB query with multiple conditions`() async throws {
             try await database.read { db in
                 // Find users with theme AND notifications key AND admin role
                 let users =
@@ -515,8 +515,8 @@ extension SnapshotIntegrationTests.Features.JSONB {
             }
         }
 
-        @Test("JSONB with ordering and limits")
-        func jsonbWithOrderingAndLimits() async throws {
+        @Test
+        func `JSONB with ordering and limits`() async throws {
             try await database.read { db in
                 // Select users ordered by a JSONB field
                 let results =
@@ -535,8 +535,8 @@ extension SnapshotIntegrationTests.Features.JSONB {
 
         // MARK: - Query Snapshot Tests
 
-        @Test("Contains operator returns correct users")
-        func containsQuerySnapshot() async {
+        @Test
+        func `Contains operator returns correct users`() async {
             await assertQuery(
                 UserProfile
                     .where { $0.settings.contains(["theme": "dark"]) }
@@ -561,8 +561,8 @@ extension SnapshotIntegrationTests.Features.JSONB {
             )
         }
 
-        @Test("Has key operator returns correct users")
-        func hasKeyQuerySnapshot() async {
+        @Test
+        func `Has key operator returns correct users`() async {
             await assertQuery(
                 UserProfile
                     .where { $0.settings.hasKey("notifications") }
@@ -587,8 +587,8 @@ extension SnapshotIntegrationTests.Features.JSONB {
             )
         }
 
-        @Test("Field extraction returns correct themes")
-        func fieldExtractionQuerySnapshot() async {
+        @Test
+        func `Field extraction returns correct themes`() async {
             await assertQuery(
                 UserProfile
                     .select { ($0.name, $0.settings.fieldAsText("theme")) }
@@ -614,8 +614,8 @@ extension SnapshotIntegrationTests.Features.JSONB {
             )
         }
 
-        @Test("Nested field extraction returns correct data")
-        func nestedFieldQuerySnapshot() async {
+        @Test
+        func `Nested field extraction returns correct data`() async {
             await assertQuery(
                 UserProfile
                     .where { $0.name == "Diana" }
@@ -640,7 +640,7 @@ extension SnapshotIntegrationTests.Features.JSONB {
         }
 
         // TODO: Type inference issues with concat in UPDATE statements
-        // @Test("Update with concatenation query snapshot")
+        // @Test
         // func updateConcatQuerySnapshot() async {
         //     await assertQuery(
         //         UserProfile
@@ -658,7 +658,7 @@ extension SnapshotIntegrationTests.Features.JSONB {
         // }
 
         // TODO: Method 'removing' doesn't exist on QueryExpression<Data>
-        // @Test("Update with key removal query snapshot")
+        // @Test
         // func updateRemoveKeyQuerySnapshot() async {
         //     await assertQuery(
         //         UserProfile
@@ -676,7 +676,7 @@ extension SnapshotIntegrationTests.Features.JSONB {
         // }
 
         // TODO: Type inference issues with setting in UPDATE statements
-        // @Test("Update with jsonb_set query snapshot")
+        // @Test
         // func updateJsonbSetQuerySnapshot() async {
         //     await assertQuery(
         //         UserProfile

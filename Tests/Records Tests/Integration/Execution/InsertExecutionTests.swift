@@ -5,17 +5,17 @@ import Testing
 
 extension SnapshotIntegrationTests.Execution.Insert {
     @Suite(
-        "INSERT Execution Tests",
+
         .dependencies {
             $0.envVars = .development
             $0.defaultDatabase = Database.TestDatabase.withReminderData()
         }
     )
-    struct InsertExecutionTests {
+    struct Test {
         @Dependency(\.defaultDatabase) var db
 
-        @Test("INSERT basic Draft returns correct data")
-        func insertBasicDraft() async {
+        @Test
+        func `INSERT basic Draft returns correct data`() async {
             await assertQuery(
                 Reminder.insert {
                     Reminder.Draft(
@@ -42,8 +42,8 @@ extension SnapshotIntegrationTests.Execution.Insert {
             )
         }
 
-        @Test("INSERT with all fields specified")
-        func insertWithAllFields() async throws {
+        @Test
+        func `INSERT with all fields specified`() async throws {
             let now = Date()
             let inserted = try await db.write { db in
                 try await Reminder.insert {
@@ -80,8 +80,8 @@ extension SnapshotIntegrationTests.Execution.Insert {
             }
         }
 
-        @Test("INSERT multiple Drafts returns correct data")
-        func insertMultipleDrafts() async {
+        @Test
+        func `INSERT multiple Drafts returns correct data`() async {
             await assertQuery(
                 Reminder.insert {
                     Reminder.Draft(
@@ -118,8 +118,8 @@ extension SnapshotIntegrationTests.Execution.Insert {
             )
         }
 
-        @Test("INSERT with NULL optional fields")
-        func insertWithNullFields() async throws {
+        @Test
+        func `INSERT with NULL optional fields`() async throws {
             let inserted = try await db.write { db in
                 try await Reminder.insert {
                     Reminder.Draft(
@@ -148,8 +148,8 @@ extension SnapshotIntegrationTests.Execution.Insert {
             }
         }
 
-        @Test("INSERT with priority levels returns correct data")
-        func insertWithPriorities() async {
+        @Test
+        func `INSERT with priority levels returns correct data`() async {
             await assertQuery(
                 Reminder.insert {
                     Reminder.Draft(
@@ -189,8 +189,8 @@ extension SnapshotIntegrationTests.Execution.Insert {
             )
         }
 
-        @Test("INSERT and verify with SELECT")
-        func insertAndVerify() async throws {
+        @Test
+        func `INSERT and verify with SELECT`() async throws {
             // Insert new reminder
             let inserted = try await db.write { db in
                 try await Reminder.insert {
@@ -224,8 +224,8 @@ extension SnapshotIntegrationTests.Execution.Insert {
             }
         }
 
-        @Test("INSERT with boolean flags returns correct data")
-        func insertWithBooleanFlags() async {
+        @Test
+        func `INSERT with boolean flags returns correct data`() async {
             await assertQuery(
                 Reminder.insert {
                     Reminder.Draft(
@@ -261,8 +261,8 @@ extension SnapshotIntegrationTests.Execution.Insert {
             )
         }
 
-        @Test("INSERT into different lists")
-        func insertIntoDifferentLists() async throws {
+        @Test
+        func `INSERT into different lists`() async throws {
             let inserted = try await db.write { db in
                 try await Reminder.insert {
                     Reminder.Draft(remindersListID: 1, title: "Home task")
@@ -286,8 +286,8 @@ extension SnapshotIntegrationTests.Execution.Insert {
             }
         }
 
-        @Test("INSERT with date fields")
-        func insertWithDates() async throws {
+        @Test
+        func `INSERT with date fields`() async throws {
             let futureDate = Date().addingTimeInterval(86400)  // Tomorrow
             let inserted = try await db.write { db in
                 try await Reminder.insert {
@@ -328,8 +328,8 @@ extension SnapshotIntegrationTests.Execution.Insert {
             }
         }
 
-        @Test("INSERT without RETURNING")
-        func insertWithoutReturning() async throws {
+        @Test
+        func `INSERT without RETURNING`() async throws {
             // Use unique title for cleanup
             let uniqueTitle = "No return test \(UUID())"
 

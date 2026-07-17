@@ -4,17 +4,17 @@ import Records_Test_Support
 import Testing
 
 @Suite(
-    "UPDATE Execution Tests",
+
     .dependencies {
         $0.envVars = .development
         $0.defaultDatabase = Database.TestDatabase.withReminderData()
     }
 )
-struct ExecutionUpdateTests {
+struct Test {
     @Dependency(\.defaultDatabase) var db
 
-    @Test("UPDATE with WHERE and RETURNING")
-    func updateWithWhereAndReturning() async throws {
+    @Test
+    func `UPDATE with WHERE and RETURNING`() async throws {
         // Insert test data
         let inserted = try await db.write { db in
             try await Reminder.insert {
@@ -50,8 +50,8 @@ struct ExecutionUpdateTests {
         }
     }
 
-    @Test("UPDATE with NULL values")
-    func updateWithNull() async throws {
+    @Test
+    func `UPDATE with NULL values`() async throws {
         // Insert test data with assignedUserID
         let inserted = try await db.write { db in
             try await Reminder.insert {
@@ -90,8 +90,8 @@ struct ExecutionUpdateTests {
         }
     }
 
-    @Test("UPDATE multiple columns")
-    func updateMultipleColumns() async throws {
+    @Test
+    func `UPDATE multiple columns`() async throws {
         // Insert test data
         let inserted = try await db.write { db in
             try await Reminder.insert {
@@ -130,8 +130,8 @@ struct ExecutionUpdateTests {
         }
     }
 
-    @Test("UPDATE with no matches returns empty")
-    func updateNoMatches() async throws {
+    @Test
+    func `UPDATE with no matches returns empty`() async throws {
         // Try to update non-existent record
         let results = try await db.write { db in
             try await Reminder
@@ -144,8 +144,8 @@ struct ExecutionUpdateTests {
         #expect(results.count == 0)
     }
 
-    @Test("UPDATE with WHERE on foreign key")
-    func updateWithForeignKey() async throws {
+    @Test
+    func `UPDATE with WHERE on foreign key`() async throws {
         // Insert test list
         let insertedList = try await db.write { db in
             try await RemindersList.insert {
@@ -188,8 +188,8 @@ struct ExecutionUpdateTests {
         }
     }
 
-    @Test("UPDATE all rows")
-    func updateAllRows() async throws {
+    @Test
+    func `UPDATE all rows`() async throws {
         // Insert test reminders with unique marker
         let marker = "UpdateAll-\(UUID().uuidString.prefix(8))"
         let inserted = try await db.write { db in
@@ -225,8 +225,8 @@ struct ExecutionUpdateTests {
         }
     }
 
-    @Test("UPDATE with boolean field")
-    func updateBoolean() async throws {
+    @Test
+    func `UPDATE with boolean field`() async throws {
         // Insert test data
         let inserted = try await db.write { db in
             try await Reminder.insert {
@@ -260,8 +260,8 @@ struct ExecutionUpdateTests {
         }
     }
 
-    @Test("UPDATE with text concatenation")
-    func updateTextConcat() async throws {
+    @Test
+    func `UPDATE with text concatenation`() async throws {
         // Insert test data
         let inserted = try await db.write { db in
             try await Reminder.insert {

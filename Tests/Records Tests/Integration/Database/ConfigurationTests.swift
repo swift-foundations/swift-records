@@ -6,11 +6,11 @@ import PostgresNIO
 import Records
 import Testing
 
-@Suite("Configuration")
-struct ConfigurationTests {
+@Suite
+struct Test {
 
-    @Test("Configuration from environment variables")
-    func testConfigurationFromEnvironment() async throws {
+    @Test
+    func `Configuration from environment variables`() async throws {
         // Inject the environment via the dependency: the test asserts the
         // env-var → configuration mapping, not the host machine's environment.
         let config = try withDependencies {
@@ -30,8 +30,8 @@ struct ConfigurationTests {
         #expect(config.username == "postgres")
     }
 
-    @Test("Database single connection initialization")
-    func testDatabaseQueueInitialization() async throws {
+    @Test
+    func `Database single connection initialization`() async throws {
         let config = try PostgresClient.Configuration.fromEnvironment()
 
         do {
@@ -48,8 +48,8 @@ struct ConfigurationTests {
         }
     }
 
-    @Test("Database.Pool initialization with pooling")
-    func testDatabasePoolInitialization() async throws {
+    @Test
+    func `Database.Pool initialization with pooling`() async throws {
         let config = try PostgresClient.Configuration.fromEnvironment()
 
         let pool = await Database.pool(
@@ -66,8 +66,8 @@ struct ConfigurationTests {
         try await pool.close()
     }
 
-    @Test("Configuration stores values correctly")
-    func testConfigurationValues() async throws {
+    @Test
+    func `Configuration stores values correctly`() async throws {
         let config = PostgresClient.Configuration(
             host: "localhost",
             port: 5432,
@@ -84,8 +84,8 @@ struct ConfigurationTests {
         #expect(config.password == nil)
     }
 
-    @Test("Connection factory methods")
-    func testConnectionStrategies() async throws {
+    @Test
+    func `Connection factory methods`() async throws {
         // Test single connection
         let singleConfig = PostgresClient.Configuration(
             host: "localhost",

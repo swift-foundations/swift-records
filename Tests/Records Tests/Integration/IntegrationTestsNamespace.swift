@@ -3,15 +3,15 @@ import Testing
 
 // Snapshot integration test namespaces
 extension SnapshotIntegrationTests {
-    @Suite("Execution") struct Execution {
-        @Suite("Select") struct Select {}
-        @Suite("Insert") struct Insert {}
-        @Suite("Update") struct Update {}
-        @Suite("Delete") struct Delete {}
+    @Suite struct Execution {
+        @Suite struct `Execution` {}
+        @Suite struct `Select` {}
+        @Suite struct `Insert` {}
+        @Suite struct `Update` {}
     }
 
-    @Suite("Features") struct Features {
-        @Suite("JSONB") struct JSONB {}
-        @Suite("FullTextSearch") struct FullTextSearch {}
+    @Suite struct Features {
+        @Suite struct `Features` {}
+        @Suite struct `JSONB` {}
     }
 }

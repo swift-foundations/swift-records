@@ -5,20 +5,20 @@ import Records_Test_Support
 import Testing
 
 @Suite(
-    "Error Handling Tests",
+
     .dependencies {
         $0.envVars = .development
         $0.defaultDatabase = Database.TestDatabase.withReminderData()
     }
 )
-struct ErrorHandlingTests {
+struct Test {
     @Dependency(\.defaultDatabase) var db
     @Dependency(\.defaultDatabase) var database
 
     // MARK: - Constraint Violations
 
-    @Test("NOT NULL constraint violation")
-    func testNotNullConstraintViolation() async throws {
+    @Test
+    func `NOT NULL constraint violation`() async throws {
         await #expect(throws: (any Error).self) {
             try await db.write { db in
                 try await db.execute(
@@ -31,8 +31,8 @@ struct ErrorHandlingTests {
         }
     }
 
-    @Test("Foreign key constraint violation")
-    func testForeignKeyConstraintViolation() async throws {
+    @Test
+    func `Foreign key constraint violation`() async throws {
         await #expect(throws: (any Error).self) {
             try await db.write { db in
                 try await Reminder.insert {
@@ -45,8 +45,8 @@ struct ErrorHandlingTests {
         }
     }
 
-    @Test("Unique constraint violation")
-    func testUniqueConstraintViolation() async throws {
+    @Test
+    func `Unique constraint violation`() async throws {
         // Create temporary table with unique constraint
         try await db.write { db in
             try await db.execute(
@@ -83,8 +83,8 @@ struct ErrorHandlingTests {
         }
     }
 
-    @Test("Check constraint violation")
-    func testCheckConstraintViolation() async throws {
+    @Test
+    func `Check constraint violation`() async throws {
         // Create temporary table with check constraint
         try await db.write { db in
             try await db.execute(
@@ -126,8 +126,8 @@ struct ErrorHandlingTests {
 
     // MARK: - Type Mismatches
 
-    @Test("Type mismatch - text as integer")
-    func testTypeMismatchTextAsInteger() async throws {
+    @Test
+    func `Type mismatch - text as integer`() async throws {
         await #expect(throws: (any Error).self) {
             try await db.write { db in
                 try await db.execute(
@@ -140,8 +140,8 @@ struct ErrorHandlingTests {
         }
     }
 
-    @Test("Type mismatch - invalid date format")
-    func testTypeMismatchInvalidDate() async throws {
+    @Test
+    func `Type mismatch - invalid date format`() async throws {
         await #expect(throws: (any Error).self) {
             try await db.write { db in
                 try await db.execute(
@@ -156,8 +156,8 @@ struct ErrorHandlingTests {
 
     // MARK: - Syntax Errors
 
-    @Test("SQL syntax error")
-    func testSQLSyntaxError() async throws {
+    @Test
+    func `SQL syntax error`() async throws {
         await #expect(throws: (any Error).self) {
             try await db.read { db in
                 try await db.execute("INVALID SQL SYNTAX")
@@ -165,8 +165,8 @@ struct ErrorHandlingTests {
         }
     }
 
-    @Test("Non-existent table")
-    func testNonExistentTable() async throws {
+    @Test
+    func `Non-existent table`() async throws {
         await #expect(throws: (any Error).self) {
             try await db.read { db in
                 try await db.execute("SELECT * FROM nonexistent_table")
@@ -174,8 +174,8 @@ struct ErrorHandlingTests {
         }
     }
 
-    @Test("Non-existent column")
-    func testNonExistentColumn() async throws {
+    @Test
+    func `Non-existent column`() async throws {
         await #expect(throws: (any Error).self) {
             try await db.read { db in
                 try await db.execute("SELECT nonexistent_column FROM reminders")
@@ -185,8 +185,8 @@ struct ErrorHandlingTests {
 
     // MARK: - Transaction Errors
 
-    @Test("Transaction rollback on error")
-    func testTransactionRollbackOnError() async throws {
+    @Test
+    func `Transaction rollback on error`() async throws {
         // Count reminders before transaction
         let countBefore = try await db.read { db in
             try await Reminder.fetchAll(db).count
@@ -224,8 +224,8 @@ struct ErrorHandlingTests {
         #expect(countBefore == countAfter)
     }
 
-    @Test("Nested transaction error handling with savepoints")
-    func testNestedTransactionError() async throws {
+    @Test
+    func `Nested transaction error handling with savepoints`() async throws {
         // Note: PostgreSQL uses savepoints for nested transactions
         let countBefore = try await db.read { db in
             try await Reminder.fetchAll(db).count
@@ -277,16 +277,16 @@ struct ErrorHandlingTests {
 
     // MARK: - Connection Errors
 
-    @Test("Query on closed connection", .disabled("Requires manual connection management"))
-    func testQueryOnClosedConnection() async throws {
+    @Test( .disabled("Requires manual connection management")
+    func `Query on closed connection`() async throws {
         // This would require creating a connection, closing it, then trying to use it
         // Not easily testable with current Database abstraction
     }
 
     // MARK: - Data Integrity
 
-    @Test("NULL value in non-nullable column decoded")
-    func testNullValueInNonNullableColumn() async throws {
+    @Test
+    func `NULL value in non-nullable column decoded`() async throws {
         // Insert a reminder with required field
         let inserted = try await db.write { db in
             try await Reminder.insert {
@@ -323,8 +323,8 @@ struct ErrorHandlingTests {
 
     // MARK: - Error Message Validation
 
-    @Test("NOT NULL constraint error is thrown")
-    func testErrorMessageContainsConstraintInfo() async throws {
+    @Test
+    func `NOT NULL constraint error is thrown`() async throws {
         do {
             try await db.write { db in
                 try await db.execute(
@@ -343,8 +343,8 @@ struct ErrorHandlingTests {
         }
     }
 
-    @Test("Foreign key constraint error is thrown")
-    func testForeignKeyErrorMessage() async throws {
+    @Test
+    func `Foreign key constraint error is thrown`() async throws {
         do {
             try await db.write { db in
                 try await Reminder.insert {
@@ -365,8 +365,8 @@ struct ErrorHandlingTests {
 
     // MARK: - Edge Cases
 
-    @Test("Empty string vs NULL")
-    func testEmptyStringVsNull() async throws {
+    @Test
+    func `Empty string vs NULL`() async throws {
         // Insert with empty string
         let inserted1 = try await db.write { db in
             try await Reminder.insert {
@@ -415,8 +415,8 @@ struct ErrorHandlingTests {
         }
     }
 
-    @Test("Division by zero")
-    func testDivisionByZero() async throws {
+    @Test
+    func `Division by zero`() async throws {
         await #expect(throws: (any Error).self) {
             try await db.read { db in
                 try await db.execute("SELECT 1 / 0")
@@ -424,8 +424,8 @@ struct ErrorHandlingTests {
         }
     }
 
-    @Test("Very long text value")
-    func testVeryLongTextValue() async throws {
+    @Test
+    func `Very long text value`() async throws {
         // Create a very long string (1MB)
         let longText = String(repeating: "a", count: 1_000_000)
 
@@ -465,8 +465,8 @@ struct ErrorHandlingTests {
 
     // MARK: - Timeout and Cancellation
 
-    @Test("Query timeout", .disabled("Requires timeout configuration"))
-    func testQueryTimeout() async throws {
+    @Test( .disabled("Requires timeout configuration")
+    func `Query timeout`() async throws {
         // Would require setting up a very slow query and timeout configuration
         // await #expect(throws: (any Error).self) {
         //     try await db.read { db in
@@ -475,8 +475,8 @@ struct ErrorHandlingTests {
         // }
     }
 
-    @Test("Cancelled operation", .disabled("Requires cancellation setup"))
-    func testCancelledOperation() async throws {
+    @Test( .disabled("Requires cancellation setup")
+    func `Cancelled operation`() async throws {
         // Would require setting up a cancellable task
         // let task = Task {
         //     try await db.read { db in
