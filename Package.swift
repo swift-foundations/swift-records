@@ -33,6 +33,7 @@ let package = Package(
             name: "Records",
             dependencies: [
                 .product(name: "PostgreSQL Standard", package: "swift-postgresql-standard"),
+                .product(name: "PostgreSQL Standard Macros", package: "swift-postgresql-standard"),
                 .product(name: "Structured Queries Primitives Support", package: "swift-structured-queries-primitives"),
                 .product(name: "Tagged Primitives", package: "swift-tagged-primitives"),
                 .product(name: "Tagged Primitives Standard Library Integration", package: "swift-tagged-primitives"),

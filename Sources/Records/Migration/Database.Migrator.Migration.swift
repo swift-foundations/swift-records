@@ -1,5 +1,6 @@
 import Foundation
 import PostgreSQL_Standard
+private import PostgreSQL_Standard_Macros
 
 extension Database.Migrator {
     // MARK: - Database.Migrator.Migration Table
