@@ -63,13 +63,6 @@ targets: [
   - Actor-based architecture for safe concurrent access
   - Built on swift-structured-queries-postgres and PostgresNIO
 
-### Roadmap to 1.0.0
-
-We will continue with 0.x.x versions while the API evolves:
-- 0.0.x - Bug fixes and critical issues
-- 0.x.0 - New features and potential breaking changes
-- 1.0.0 - API stability achieved, production-ready
-
 ## Quick Start
 
 ### Basic Setup
