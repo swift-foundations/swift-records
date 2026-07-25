@@ -1,7 +1,10 @@
+import Byte_Primitives
 import Foundation
 import NIOCore
 import PostgresNIO
 import PostgreSQL_Standard
+import Structured_Queries_Primitives_Foundation_Integration
+import Time_Primitives
 
 public struct PostgresQueryDecoder: QueryDecoder {
     internal let row: PostgresRandomAccessRow
@@ -16,7 +19,7 @@ public struct PostgresQueryDecoder: QueryDecoder {
         currentIndex = 0
     }
 
-    public mutating func decode(_ columnType: [UInt8].Type) throws -> [UInt8]? {
+    public mutating func decode(_ columnType: [Byte].Type) throws -> [Byte]? {
         defer { currentIndex += 1 }
         let column = row[currentIndex]
 
@@ -29,12 +32,12 @@ public struct PostgresQueryDecoder: QueryDecoder {
         // PostgreSQL can return JSONB as a text string in JSON format
         if let jsonString = try? column.decode(String.self) {
             // If we got a valid JSON string, convert to UTF-8 bytes
-            return Array(jsonString.utf8)
+            return jsonString.utf8.map(Byte.init)
         }
 
         // Fall back to ByteA (PostgreSQL's binary data type)
         if let buffer = try? column.decode(ByteBuffer.self) {
-            return Array(buffer.readableBytesView)
+            return buffer.readableBytesView.map(Byte.init)
         }
 
         return nil
@@ -118,7 +121,11 @@ public struct PostgresQueryDecoder: QueryDecoder {
         return try column.decode(Int.self)
     }
 
-    public mutating func decode(_ columnType: Date.Type) throws -> Date? {
+    // The requirement is stated in `Instant` since the L1 Foundation drain.
+    // PostgresNIO decodes timestamps as `Foundation.Date`, so the wire value is
+    // still read as a `Date` and lifted at the boundary — including the ISO8601
+    // string fallback, which is unchanged apart from that lift.
+    public mutating func decode(_ columnType: Instant.Type) throws -> Instant? {
         defer { currentIndex += 1 }
         let column = row[currentIndex]
 
@@ -127,19 +134,23 @@ public struct PostgresQueryDecoder: QueryDecoder {
         }
 
         // PostgreSQL can store dates as timestamps
-        if let date = try? column.decode(Date.self) {
-            return date
+        if let date = try? column.decode(Foundation.Date.self) {
+            return date.instant
         }
 
         // Fallback to ISO8601 string parsing
         if let dateString = try? column.decode(String.self) {
-            return ISO8601DateFormatter().date(from: dateString)
+            return ISO8601DateFormatter().date(from: dateString)?.instant
         }
 
         return nil
     }
 
-    public mutating func decode(_ columnType: UUID.Type) throws -> UUID? {
+    // Likewise stated in the core's byte-based `QueryBinding.UUID`; PostgresNIO's
+    // codec is `Foundation.UUID`, so the value is lifted at the boundary.
+    public mutating func decode(
+        _ columnType: QueryBinding.UUID.Type
+    ) throws -> QueryBinding.UUID? {
         defer { currentIndex += 1 }
         let column = row[currentIndex]
 
@@ -147,18 +158,11 @@ public struct PostgresQueryDecoder: QueryDecoder {
             return nil
         }
 
-        return try column.decode(UUID.self)
+        return QueryBinding.UUID(try column.decode(Foundation.UUID.self))
     }
 
-    public mutating func decode(_ columnType: Decimal.Type) throws -> Decimal? {
-        defer { currentIndex += 1 }
-        let column = row[currentIndex]
-
-        if column.bytes == nil {
-            return nil
-        }
-
-        return try column.decode(Decimal.self)
-    }
-
+    // `decode(_: Decimal.Type)` is deliberately absent: the L1 Foundation drain
+    // removed that `QueryDecoder` requirement, and `Decimal` now decodes through
+    // the Foundation Integration target's `Decimal.init(decoder:)`, which reads
+    // the value's exact digits as a `String`.
 }

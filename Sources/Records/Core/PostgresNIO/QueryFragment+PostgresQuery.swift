@@ -1,7 +1,9 @@
+import Byte_Primitives
 import Foundation
 import NIOCore
 import PostgresNIO
 import PostgreSQL_Standard
+import Structured_Queries_Primitives_Foundation_Integration
 
 extension PostgresQuery {
     package init(from fragment: QueryFragment) {
@@ -45,13 +47,23 @@ extension QueryFragment {
         case .text(let value):
             bindings.append(value, context: .default)
         case .blob(let bytes):
-            // Convert [UInt8] to ByteBuffer for PostgreSQL bytea type
+            // Convert [Byte] to ByteBuffer for PostgreSQL bytea type
             var buffer = ByteBufferAllocator().buffer(capacity: bytes.count)
-            buffer.writeBytes(bytes)
+            buffer.writeBytes(bytes.map(\.underlying))
             bindings.append(buffer, context: .default)
-        case .date(let date):
-            bindings.append(date, context: .default)
-        case .uuid(let uuid):
+        case .date(let instant):
+            // PostgresNIO's timestamp codec is Foundation's Date; the core carries
+            // the Foundation-free Instant, so it is lowered here.
+            bindings.append(Foundation.Date(instant), context: .default)
+        case .uuid(let identifier):
+            // Likewise: the core carries 16 raw bytes, PostgresNIO wants a UUID.
+            guard let uuid = Foundation.UUID(identifier) else {
+                // A payload that is not exactly 16 bytes cannot be a UUID; fall back
+                // to null rather than trapping, as the .invalid case does.
+                print("Warning: uuid binding is not 16 bytes; binding NULL")
+                bindings.appendNull()
+                break
+            }
             bindings.append(uuid, context: .default)
         case .invalid(let error):
             // Log error and append null as fallback
@@ -60,12 +72,19 @@ extension QueryFragment {
         case .bool(let value):
             // Use native PostgreSQL boolean type
             bindings.append(value, context: .default)
-        case .jsonb(let data):
+        case .jsonb(let bytes):
             // Use PostgresNIO's JSONB support
-            let postgresData = PostgresData(jsonb: data)
+            let postgresData = PostgresData(jsonb: Data(bytes.map(\.underlying)))
             bindings.append(postgresData)
-        case .decimal(let value):
-            // Use PostgresNIO's Decimal support for NUMERIC type
+        case .decimal(let digits):
+            // The core carries the value's exact digit string; PostgresNIO's NUMERIC
+            // codec is Decimal, which is exactly what those digits were produced from
+            // (`Decimal.description` in the Foundation Integration target).
+            guard let value = Decimal(string: digits) else {
+                print("Warning: decimal binding is not a decimal literal: \(digits)")
+                bindings.appendNull()
+                break
+            }
             do {
                 try bindings.append(value, context: .default)
             } catch {
@@ -90,10 +109,16 @@ extension QueryFragment {
             bindings.append(values, context: .default)
         case .doubleArray(let values):
             bindings.append(values, context: .default)
-        case .uuidArray(let values):
-            bindings.append(values, context: .default)
-        case .dateArray(let values):
-            bindings.append(values, context: .default)
+        case .uuidArray(let identifiers):
+            let uuids = identifiers.compactMap { Foundation.UUID($0) }
+            guard uuids.count == identifiers.count else {
+                print("Warning: uuidArray binding has a non-16-byte element; binding NULL")
+                bindings.appendNull()
+                break
+            }
+            bindings.append(uuids, context: .default)
+        case .dateArray(let instants):
+            bindings.append(instants.map { Foundation.Date($0) }, context: .default)
         case .genericArray:
             // For generic arrays, we need to recursively append each binding
             // However, PostgreSQL doesn't support heterogeneous arrays, so we need to
