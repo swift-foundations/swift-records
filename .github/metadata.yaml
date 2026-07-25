@@ -1,0 +1,9 @@
+# .github/metadata.yaml
+description: "Type-safe, high-level PostgreSQL database abstraction built on StructuredQueries and PostgresNIO for Swift."
+topics:
+  - foundations
+  - postgresql
+  - database
+homepage: "https://swift-institute.org"
+readme:
+  family: E
