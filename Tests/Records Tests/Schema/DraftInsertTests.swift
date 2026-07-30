@@ -292,7 +292,7 @@ struct Test {
         }
 
         // Get the SQL query
-        let sql = insertStatement.query.toPostgresQuery().sql
+        let sql = try insertStatement.query.toPostgresQuery().sql
 
         // Verify the SQL doesn't contain NULL in VALUES for the id
         // It should either:

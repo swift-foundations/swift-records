@@ -41,12 +41,12 @@ struct Test {
 struct `Adapter Tests` {
 
     @Test
-    func `Query Fragment to Postgres Query conversion`() {
+    func `Query Fragment to Postgres Query conversion`() throws {
         let fragment: QueryFragment = """
             SELECT * FROM users WHERE id = \(42) AND name = \(bind: "Alice")
             """
 
-        let query = fragment.toPostgresQuery()
+        let query = try fragment.toPostgresQuery()
 
         #expect(query.sql == "SELECT * FROM users WHERE id = $1 AND name = $2")
         #expect(query.binds.count == 2)
@@ -58,28 +58,44 @@ struct `Adapter Tests` {
     }
 
     @Test
-    func `Query Fragment with NULL values`() {
+    func `Query Fragment with NULL values`() throws {
         let fragment: QueryFragment = """
             INSERT INTO users (id, name, email) VALUES (\(1), \(bind: "Bob"), \(QueryBinding.null))
             """
 
-        let query = fragment.toPostgresQuery()
+        let query = try fragment.toPostgresQuery()
 
         #expect(query.sql == "INSERT INTO users (id, name, email) VALUES ($1, $2, $3)")
         #expect(query.binds.count == 3)
     }
 
     @Test
-    func `Query Fragment with BLOB data`() {
+    func `Query Fragment with BLOB data`() throws {
         let data = Data([0x01, 0x02, 0x03])
         let fragment: QueryFragment = """
             UPDATE files SET content = \(data) WHERE id = \(100)
             """
 
-        let query = fragment.toPostgresQuery()
+        let query = try fragment.toPostgresQuery()
 
         #expect(query.sql == "UPDATE files SET content = $1 WHERE id = $2")
         #expect(query.binds.count == 2)
+    }
+
+    @Test
+    func `Generic array binding throws a typed error instead of binding NULL`() {
+        // PostgreSQL has no heterogeneous array type, so a `.genericArray` binding
+        // (mixed-case elements) cannot be represented as a native array parameter.
+        // Regression coverage for swift-foundations/swift-records#9: this used to
+        // silently substitute NULL for the caller's actual values instead of
+        // failing the query.
+        let fragment: QueryFragment = """
+            SELECT * FROM users WHERE tags = \(QueryBinding.genericArray([.int(1), .text("a")]))
+            """
+
+        #expect(throws: Database.Error.self) {
+            try fragment.toPostgresQuery()
+        }
     }
 
     @Test

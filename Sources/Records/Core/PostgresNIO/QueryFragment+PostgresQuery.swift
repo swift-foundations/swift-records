@@ -6,7 +6,7 @@ import PostgresNIO
 import Structured_Queries_Primitives_Foundation_Integration
 
 extension PostgresQuery {
-    package init(from fragment: QueryFragment) {
+    package init(from fragment: QueryFragment) throws(Database.Error) {
         var parameterIndex = 0
         var bindings = PostgresBindings()
         var sqlParts: [String] = []
@@ -19,7 +19,7 @@ extension PostgresQuery {
             case .binding(let binding):
                 parameterIndex += 1
                 sqlParts.append("$\(parameterIndex)")
-                fragment.appendBinding(binding, to: &bindings)
+                try fragment.appendBinding(binding, to: &bindings)
             }
         }
 
@@ -34,9 +34,12 @@ extension PostgresQuery {
 
 extension QueryFragment {
     /// Converts a QueryFragment to a PostgresQuery for execution
-    package func toPostgresQuery() -> PostgresQuery { .init(from: self) }
+    package func toPostgresQuery() throws(Database.Error) -> PostgresQuery { try .init(from: self) }
 
-    func appendBinding(_ binding: QueryBinding, to bindings: inout PostgresBindings) {
+    func appendBinding(
+        _ binding: QueryBinding,
+        to bindings: inout PostgresBindings
+    ) throws(Database.Error) {
         switch binding {
         case .null:
             bindings.appendNull()
@@ -120,13 +123,14 @@ extension QueryFragment {
         case .dateArray(let instants):
             bindings.append(instants.map { Foundation.Date($0) }, context: .default)
         case .genericArray:
-            // For generic arrays, we need to recursively append each binding
-            // However, PostgreSQL doesn't support heterogeneous arrays, so we need to
-            // convert all elements to a compatible type. This is complex and requires
-            // determining the common type at runtime.
-            // For now, we'll throw an error if this case is hit
-            print("Warning: genericArray case not yet implemented for PostgreSQL binding")
-            bindings.appendNull()
+            // Generic arrays hold elements of mixed QueryBinding cases; PostgreSQL
+            // has no heterogeneous array type, so there is no faithful native
+            // representation to bind. Binding NULL here would let the caller's
+            // query "succeed" while silently writing or filtering against the
+            // wrong value, so this surfaces as an explicit, typed failure instead.
+            throw Database.Error.invalidBinding(
+                "genericArray bindings have no PostgreSQL representation; PostgreSQL does not support heterogeneous arrays"
+            )
         }
     }
 }

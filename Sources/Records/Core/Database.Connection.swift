@@ -18,7 +18,7 @@ extension Database {
             let queryFragment = statement.query
             guard !queryFragment.isEmpty else { return }
 
-            let query = queryFragment.toPostgresQuery()
+            let query = try queryFragment.toPostgresQuery()
             _ = try await postgres.query(
                 query,
                 logger: logger
@@ -31,7 +31,7 @@ extension Database {
         }
 
         public func executeFragment(_ fragment: QueryFragment) async throws {
-            let query = fragment.toPostgresQuery()
+            let query = try fragment.toPostgresQuery()
             _ = try await postgres.query(
                 query,
                 logger: logger
@@ -44,7 +44,7 @@ extension Database {
             let queryFragment = statement.query
             guard !queryFragment.isEmpty else { return [] }
 
-            let query = queryFragment.toPostgresQuery()
+            let query = try queryFragment.toPostgresQuery()
             let rows = try await postgres.query(
                 query,
                 logger: logger
@@ -72,7 +72,7 @@ extension Database {
             let queryFragment = statement.query
             guard !queryFragment.isEmpty else { return [] }
 
-            let query = queryFragment.toPostgresQuery()
+            let query = try queryFragment.toPostgresQuery()
             let rows = try await postgres.query(
                 query,
                 logger: logger
@@ -103,7 +103,7 @@ extension Database {
                 return Database.Cursor<QueryValue.QueryOutput> { nil }
             }
 
-            let query = queryFragment.toPostgresQuery()
+            let query = try queryFragment.toPostgresQuery()
             let rows = try await postgres.query(
                 query,
                 logger: logger

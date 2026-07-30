@@ -42,6 +42,11 @@ extension Database {
         /// Invalid notification payload.
         case invalidNotificationPayload(String)
 
+        /// A query binding has no representation in the underlying database driver
+        /// (for example, a `.genericArray` binding: PostgreSQL has no heterogeneous
+        /// array type). The query is not executed.
+        case invalidBinding(String)
+
         /// Failed to decode notification payload.
         case notificationDecodingFailed(type: String, payload: String, underlying: Swift.Error)
 
@@ -93,6 +98,9 @@ extension Database {
 
             case .invalidNotificationPayload(let message):
                 return "Invalid notification payload: \(message)"
+
+            case .invalidBinding(let message):
+                return "Cannot bind value to statement: \(message)"
 
             case .notificationDecodingFailed(let type, let payload, let error):
                 return
