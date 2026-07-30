@@ -1,8 +1,8 @@
 import Dependencies
+import Environment_Dependencies
 import Foundation
 import NIOSSL
 import PostgresNIO
-import Environment_Dependencies
 
 // MARK: - Configuration Errors
 

@@ -79,7 +79,7 @@ extension Database {
         }
 
         func close() async throws {
-            fatalError()
+            fatalError("close() is not supported on this connection type")
         }
     }
 }

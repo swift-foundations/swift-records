@@ -1,10 +1,11 @@
 import Dependencies
 import Dependencies_Test_Support
-import PostgresNIO
 import Environment_Dependencies
-@testable import Records
+import PostgresNIO
 import Records_Test_Support
 import Testing
+
+@testable import Records
 
 @Suite
 struct Test {

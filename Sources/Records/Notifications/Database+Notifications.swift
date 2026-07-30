@@ -544,7 +544,7 @@ extension Database.Reader {
                         // Keep the connection alive indefinitely until cancelled
                         // This will be cancelled when the stream consumer stops iterating
                         try await withUnsafeThrowingContinuation {
-                            (continuation: UnsafeContinuation<Void, Error>) in
+                            (_: UnsafeContinuation<Void, Error>) in
                             // Never resume - only cancelled via task cancellation
                         }
 

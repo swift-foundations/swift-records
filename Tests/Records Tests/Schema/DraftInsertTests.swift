@@ -1,11 +1,12 @@
 import Dependencies
 import Dependencies_Test_Support
 import Foundation
-import PostgresNIO
-@testable import Records
-import Records_Test_Support
 import PostgreSQL_Standard
+import PostgresNIO
+import Records_Test_Support
 import Testing
+
+@testable import Records
 
 // Test model similar to Repository.Traffic.Hourly.Record with UUID primary key
 @Table("draft_test_records")

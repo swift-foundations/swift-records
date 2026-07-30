@@ -1,8 +1,8 @@
 import Byte_Primitives
 import Foundation
 import NIOCore
-import PostgresNIO
 import PostgreSQL_Standard
+import PostgresNIO
 import Structured_Queries_Primitives_Foundation_Integration
 import Time_Primitives
 

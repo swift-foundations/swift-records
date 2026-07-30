@@ -277,7 +277,7 @@ struct Test {
 
     // MARK: - Connection Errors
 
-    @Test( .disabled("Requires manual connection management")
+    @Test(.disabled("Requires manual connection management"))
     func `Query on closed connection`() async throws {
         // This would require creating a connection, closing it, then trying to use it
         // Not easily testable with current Database abstraction
@@ -406,8 +406,8 @@ struct Test {
             try await Reminder.find(insertedId2).fetchOne(db)
         }
 
-        #expect(reminder1?.notes == "")
-        #expect(reminder2?.notes == nil || reminder2?.notes == "")
+        #expect(reminder1?.notes?.isEmpty == true)
+        #expect(reminder2?.notes == nil || reminder2?.notes?.isEmpty == true)
 
         // Cleanup
         try await db.write { db in
@@ -465,7 +465,7 @@ struct Test {
 
     // MARK: - Timeout and Cancellation
 
-    @Test( .disabled("Requires timeout configuration")
+    @Test(.disabled("Requires timeout configuration"))
     func `Query timeout`() async throws {
         // Would require setting up a very slow query and timeout configuration
         // await #expect(throws: (any Error).self) {
@@ -475,7 +475,7 @@ struct Test {
         // }
     }
 
-    @Test( .disabled("Requires cancellation setup")
+    @Test(.disabled("Requires cancellation setup"))
     func `Cancelled operation`() async throws {
         // Would require setting up a cancellable task
         // let task = Task {

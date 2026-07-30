@@ -1,7 +1,7 @@
 import Foundation
 import Logging
-import PostgresNIO
 import PostgreSQL_Standard
+import PostgresNIO
 
 extension Database {
     /// Internal wrapper to bridge to PostgresConnection

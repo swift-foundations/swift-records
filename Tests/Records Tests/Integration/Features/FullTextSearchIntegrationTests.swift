@@ -1,8 +1,8 @@
 import Dependencies
 import Dependencies_Test_Support
 import Foundation
-import Records_Test_Support
 import PostgreSQL_Standard
+import Records_Test_Support
 import Testing
 
 // MARK: - Test Suite

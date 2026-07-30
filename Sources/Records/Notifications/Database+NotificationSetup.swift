@@ -158,7 +158,9 @@ extension Database.Connection.`Protocol` {
         channel: ChannelName,
         includeOldValues: Bool
     ) async throws {
-        let functionName = FunctionName(stringLiteral: "\(On.tableName)_\(channel.underlying)_notify")
+        let functionName = FunctionName(
+            stringLiteral: "\(On.tableName)_\(channel.underlying)_notify"
+        )
 
         let payloadExpression: String
         if includeOldValues {
@@ -195,7 +197,9 @@ extension Database.Connection.`Protocol` {
         )
         do {
             try await execute(sql)
-            print("✅ Successfully created notification trigger function '\(functionName.underlying)'")
+            print(
+                "✅ Successfully created notification trigger function '\(functionName.underlying)'"
+            )
         } catch {
             print("❌ Failed to create notification trigger function: \(String(reflecting: error))")
             throw error
@@ -220,8 +224,12 @@ extension Database.Connection.`Protocol` {
             throw Database.Error.invalidNotificationChannels("At least one trigger event required")
         }
 
-        let triggerName = TriggerName(stringLiteral: "\(On.tableName)_\(channel.underlying)_trigger")
-        let functionName = FunctionName(stringLiteral: "\(On.tableName)_\(channel.underlying)_notify")
+        let triggerName = TriggerName(
+            stringLiteral: "\(On.tableName)_\(channel.underlying)_trigger"
+        )
+        let functionName = FunctionName(
+            stringLiteral: "\(On.tableName)_\(channel.underlying)_notify"
+        )
 
         let eventList = events.map(\.rawValue).sorted().joined(separator: " OR ")
         let timingKeyword = timing.rawValue
@@ -256,7 +264,9 @@ extension Database.Connection.`Protocol` {
         channel: ChannelName,
         ifExists: Bool
     ) async throws {
-        let triggerName = TriggerName(stringLiteral: "\(On.tableName)_\(channel.underlying)_trigger")
+        let triggerName = TriggerName(
+            stringLiteral: "\(On.tableName)_\(channel.underlying)_trigger"
+        )
         let ifExistsClause = ifExists ? "IF EXISTS " : ""
         let sql = "DROP TRIGGER \(ifExistsClause)\(triggerName.quoted) ON \(On.tableName.quoted())"
 

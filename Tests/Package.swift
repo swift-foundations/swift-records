@@ -21,11 +21,17 @@ let package = Package(
             dependencies: [
                 .product(name: "Records", package: "swift-records"),
                 .product(name: "PostgreSQL Standard", package: "swift-postgresql-standard"),
-                .product(name: "PostgreSQL Standard Test Support", package: "swift-postgresql-standard"),
+                .product(
+                    name: "PostgreSQL Standard Test Support",
+                    package: "swift-postgresql-standard"
+                ),
                 .product(name: "Tests Inline Snapshot", package: "swift-tests"),
                 .product(name: "Dependencies", package: "swift-dependencies"),
                 .product(name: "Dependencies Test Support", package: "swift-dependencies"),
-                .product(name: "Environment Dependencies", package: "swift-environment-dependencies"),
+                .product(
+                    name: "Environment Dependencies",
+                    package: "swift-environment-dependencies"
+                ),
                 .product(name: "PostgresNIO", package: "postgres-nio"),
             ],
             path: "Records Test Support"
@@ -40,7 +46,10 @@ let package = Package(
                 .product(name: "Tests Apple Testing Bridge", package: "swift-tests"),
                 .product(name: "Dependencies", package: "swift-dependencies"),
                 .product(name: "Dependencies Test Support", package: "swift-dependencies"),
-                .product(name: "Environment Dependencies", package: "swift-environment-dependencies"),
+                .product(
+                    name: "Environment Dependencies",
+                    package: "swift-environment-dependencies"
+                ),
                 .product(name: "PostgresNIO", package: "postgres-nio"),
             ],
             path: "Records Tests"

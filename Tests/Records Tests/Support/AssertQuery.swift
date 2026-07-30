@@ -1,7 +1,7 @@
 import Dependencies
+import PostgreSQL_Standard
 import Records
 import Records_Test_Support
-import PostgreSQL_Standard
 
 /// Convenience wrapper for assertQuery that auto-injects database dependency.
 ///

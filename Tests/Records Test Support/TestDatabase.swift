@@ -1,7 +1,7 @@
 import Foundation
+import PostgreSQL_Standard
 import PostgresNIO
 import Records
-import PostgreSQL_Standard
 
 extension Database {
     /// A test database wrapper that provides schema isolation for tests

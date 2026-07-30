@@ -14,7 +14,7 @@ struct Test {
         var migrator = Database.Migrator()
 
         // Can register a migration as shown in README (from README line 255)
-        migrator.registerMigration("create_users") { db in
+        migrator.registerMigration("create_users") { _ in
             // Migration would execute SQL here
         }
 

@@ -1,8 +1,8 @@
 import Dependencies
 import Foundation
+import PostgreSQL_Standard
 import PostgresNIO
 import Records
-import PostgreSQL_Standard
 import Testing
 
 // MARK: - Test Database Setup (Reminder Schema - Upstream Compatible)

@@ -22,7 +22,13 @@ extension URL {
 
 // Add EnvironmentVariables configuration
 extension EnvironmentVariables {
-    static let development: Self = try! .live(
-        environmentConfiguration: .projectRoot(.projectRoot, environment: "development")
-    )
+    static let development: Self = {
+        do {
+            return try .live(
+                environmentConfiguration: .projectRoot(.projectRoot, environment: "development")
+            )
+        } catch {
+            preconditionFailure("The development environment configuration must load: \(error)")
+        }
+    }()
 }

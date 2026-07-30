@@ -1,8 +1,8 @@
 import Dependencies
 import Dependencies_Test_Support
 import Foundation
-import Records_Test_Support
 import PostgreSQL_Standard
+import Records_Test_Support
 import Testing
 
 // MARK: - Test Suite
@@ -112,7 +112,9 @@ extension SnapshotIntegrationTests.Features.JSONB {
                     .fetchAll(db)
 
                 #expect(usersWithNotifications.count == 2)
-                #expect(Swift.Set(usersWithNotifications.map(\.name)) == Swift.Set(["Bob", "Diana"]))
+                #expect(
+                    Swift.Set(usersWithNotifications.map(\.name)) == Swift.Set(["Bob", "Diana"])
+                )
             }
         }
 
@@ -299,7 +301,7 @@ extension SnapshotIntegrationTests.Features.JSONB {
 
         @Test
         func `Remove key from JSONB (-)`() async throws {
-            try await database.withRollback { db in
+            try await database.withRollback { _ in
                 // For now, skip this test due to update API limitations
                 // The JSONB removing operations work in SELECT but need
                 // special handling in UPDATE statements
@@ -310,7 +312,7 @@ extension SnapshotIntegrationTests.Features.JSONB {
 
         @Test
         func `Remove multiple keys from JSONB`() async throws {
-            try await database.withRollback { db in
+            try await database.withRollback { _ in
                 // TODO: Currently has type inference issues with update operations
                 // Remove multiple keys
                 // try await UserProfile
@@ -327,7 +329,7 @@ extension SnapshotIntegrationTests.Features.JSONB {
 
         @Test
         func `Remove field at path (#-)`() async throws {
-            try await database.withRollback { db in
+            try await database.withRollback { _ in
                 // TODO: Currently has type inference issues with update operations
                 // Remove nested field
                 // try await UserProfile
@@ -346,7 +348,7 @@ extension SnapshotIntegrationTests.Features.JSONB {
 
         @Test
         func `Set JSONB value at path (jsonb set)`() async throws {
-            try await database.withRollback { db in
+            try await database.withRollback { _ in
                 // TODO: Currently has type inference issues with update operations
                 // Set nested value
                 // try await UserProfile

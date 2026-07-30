@@ -1,7 +1,7 @@
 import Dependencies
 import Foundation
-import Records_Test_Support
 import PostgreSQL_Standard
+import Records_Test_Support
 import Testing
 
 @Suite(

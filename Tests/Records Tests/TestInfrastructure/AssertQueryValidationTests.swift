@@ -1,8 +1,8 @@
 import Dependencies
 import Records
 import Records_Test_Support
-import Tests_Apple_Testing_Bridge
 import Testing
+import Tests_Apple_Testing_Bridge
 
 @Suite(
 
