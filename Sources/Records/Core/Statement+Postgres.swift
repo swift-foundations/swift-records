@@ -3,7 +3,7 @@ import PostgreSQL_Standard
 // MARK: - TemporaryView Validation
 
 /// Error thrown when attempting to create a view with parameterized queries
-public struct ParameterizedViewError: Error, CustomStringConvertible {
+public struct ParameterizedViewError: Swift.Error, CustomStringConvertible {
     public let parameterCount: Int
     public let sql: String
 
