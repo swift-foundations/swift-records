@@ -26,12 +26,12 @@ let package = Package(
         // Queries Primitives). Replaces the pointfreeco swift-structured-queries-postgres fork.
         .package(
             url: "https://github.com/swift-standards/swift-postgresql-standard.git",
-            branch: "main"
+            revision: "b9d6f35a35089e397a7cfc025e75ca3de7ffc2d1"
         ),
         // L1 — identifier/string quoting helpers (FullTextSearch SQL emission).
         .package(
             url: "https://github.com/swift-primitives/swift-structured-queries-primitives.git",
-            branch: "main"
+            revision: "6bb7361a5d0edb60d49863ba2c4d49e1394edc7c"
         ),
         // L1 — `Byte`, the element type of `QueryBinding`'s blob/jsonb payloads and
         // of the `QueryDecoder` blob requirement since the L1 Foundation drain.
