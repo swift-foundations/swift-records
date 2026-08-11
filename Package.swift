@@ -59,8 +59,7 @@ let package = Package(
         // Provider-neutral SQL execution and its PostgreSQL Structured Queries bridge.
         .package(
             url: "https://github.com/swift-foundations/swift-sql.git",
-            revision: "dc2ef3a3b54294365a5e5b3af91496cb6d3d2802",
-            traits: ["PostgreSQLStandardIntegration"]
+            revision: "dc2ef3a3b54294365a5e5b3af91496cb6d3d2802"
         ),
         // Wire execution (PostgresNIO confined to Core/PostgresNIO/ + the config entry points).
         .package(url: "https://github.com/vapor/postgres-nio.git", from: "1.21.0"),
