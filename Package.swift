@@ -15,7 +15,11 @@ let package = Package(
         .library(
             name: "Records",
             targets: ["Records"]
-        )
+        ),
+        .library(
+            name: "Records SQL Integration",
+            targets: ["Records SQL Integration"]
+        ),
     ],
     dependencies: [
         // L2 — institute-native PostgreSQL-dialect DSL (re-exports L1 Structured
@@ -51,6 +55,12 @@ let package = Package(
         .package(
             url: "https://github.com/swift-foundations/swift-environment-dependencies.git",
             branch: "main"
+        ),
+        // Provider-neutral SQL execution and its PostgreSQL Structured Queries bridge.
+        .package(
+            url: "https://github.com/swift-foundations/swift-sql.git",
+            branch: "main",
+            traits: ["PostgreSQLStandardIntegration"]
         ),
         // Wire execution (PostgresNIO confined to Core/PostgresNIO/ + the config entry points).
         .package(url: "https://github.com/vapor/postgres-nio.git", from: "1.21.0"),
@@ -91,6 +101,17 @@ let package = Package(
                     name: "Environment Dependencies",
                     package: "swift-environment-dependencies"
                 ),
+            ]
+        ),
+        // An additive membrane from Records' established public protocols to the engine-free SQL
+        // execution surface. This target must remain provider-free: a provider conforms to SQL in
+        // its own leaf, then an application elects to compose that provider with this adapter.
+        .target(
+            name: "Records SQL Integration",
+            dependencies: [
+                "Records",
+                .product(name: "SQL", package: "swift-sql"),
+                .product(name: "SQL PostgreSQL Standard Integration", package: "swift-sql"),
             ]
         )
     ],
