@@ -26,12 +26,12 @@ let package = Package(
         // Queries Primitives). Replaces the pointfreeco swift-structured-queries-postgres fork.
         .package(
             url: "https://github.com/swift-standards/swift-postgresql-standard.git",
-            revision: "b9d6f35a35089e397a7cfc025e75ca3de7ffc2d1"
+            branch: "main"
         ),
         // L1 — identifier/string quoting helpers (FullTextSearch SQL emission).
         .package(
             url: "https://github.com/swift-primitives/swift-structured-queries-primitives.git",
-            revision: "6bb7361a5d0edb60d49863ba2c4d49e1394edc7c"
+            branch: "main"
         ),
         // L1 — `Byte`, the element type of `QueryBinding`'s blob/jsonb payloads and
         // of the `QueryDecoder` blob requirement since the L1 Foundation drain.
@@ -59,10 +59,10 @@ let package = Package(
         // Provider-neutral SQL execution and its PostgreSQL Structured Queries bridge.
         .package(
             url: "https://github.com/swift-foundations/swift-sql.git",
-            revision: "dc2ef3a3b54294365a5e5b3af91496cb6d3d2802"
+            branch: "main"
         ),
         // Wire execution (PostgresNIO confined to Core/PostgresNIO/ + the config entry points).
-        .package(url: "https://github.com/vapor/postgres-nio.git", from: "1.21.0"),
+        .package(url: "https://github.com/vapor/postgres-nio.git", branch: "main"),
         .package(
             url: "https://github.com/swift-foundations/swift-dependencies.git",
             branch: "main"
