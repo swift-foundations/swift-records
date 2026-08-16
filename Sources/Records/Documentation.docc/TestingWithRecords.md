@@ -374,6 +374,25 @@ Test query performance:
 }
 ```
 
+## Recording Integration Snapshots
+
+Integration tests that use `assertQuery` are nested below the
+`SnapshotIntegrationTests` suite. Recording is controlled centrally in
+`Tests/Records Tests/Support/IntegrationTestsSuite.swift`:
+
+```swift
+@MainActor @Suite(.serialized, .snapshots(record: .never))
+struct SnapshotIntegrationTests {}
+```
+
+Temporarily change the recording mode from `.never` to `.all` to regenerate every
+SQL and result snapshot, run the package tests through the Institute coordinator,
+review the resulting source changes, and restore `.never` before committing.
+
+The suite hierarchy supports focused runs of the complete integration surface or
+an individual namespace such as `SnapshotIntegrationTests.Execution.Select` or
+`SnapshotIntegrationTests.Features.JSONB`.
+
 ## Environment Setup
 
 Configure test database via environment variables:

@@ -860,20 +860,9 @@ struct ArticleSearchService {
 
 ## Development Documentation
 
-For contributors and those interested in the package's development history:
-
-- **[Development History](docs/DEVELOPMENT_HISTORY.md)** - Journey from initial implementation to 94 passing tests
-  - Phase 1: Test cleanup and package boundary establishment
-  - Phase 2: Reminder schema implementation (upstream alignment)
-  - Phase 3: Package deduplication (removing ~750 lines of duplicate code)
-  - Phase 4: PostgreSQL-specific test fixes (sequences, DATE types)
-
-- **[Testing Architecture](docs/TESTING_ARCHITECTURE.md)** - Comprehensive testing patterns and solutions
-  - Upstream patterns analysis (sqlite-data, swift-structured-queries)
-  - PostgreSQL vs SQLite differences
-  - Evolution of testing approaches
-  - Final solution: Direct database creation for parallel test execution
-  - Best practices and troubleshooting
+- **[Package documentation](Sources/Records/Documentation.docc/Documentation.md)**
+- **[Testing with Records](Sources/Records/Documentation.docc/TestingWithRecords.md)**
+- **[Full-text search architecture](Sources/Records/Documentation.docc/FullTextSearchArchitecture.md)**
 
 ## Related Packages
 
