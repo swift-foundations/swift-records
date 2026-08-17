@@ -52,7 +52,7 @@ extension Database.Connection.`Protocol` {
         _ name: String,
         body: String,
         returns: String = "trigger"
-    ) async throws {
+    ) async throws(Database.Error) {
         let sql = """
             CREATE OR REPLACE FUNCTION \(name)() RETURNS \(returns) AS $$
             BEGIN

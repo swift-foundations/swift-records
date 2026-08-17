@@ -10,9 +10,9 @@ extension Database {
     public struct Cursor<Element: Sendable>: AsyncSequence, Sendable {
         public typealias Element = Element
 
-        private let fetchNext: @Sendable () async throws -> Element?
+        private let fetchNext: @Sendable () async throws(Database.Error) -> Element?
 
-        init(fetchNext: @escaping @Sendable () async throws -> Element?) {
+        init(fetchNext: @escaping @Sendable () async throws(Database.Error) -> Element?) {
             self.fetchNext = fetchNext
         }
 
@@ -21,14 +21,14 @@ extension Database {
         }
 
         public struct AsyncIterator: AsyncIteratorProtocol {
-            private let fetchNext: @Sendable () async throws -> Element?
+            private let fetchNext: @Sendable () async throws(Database.Error) -> Element?
             private var exhausted = false
 
-            init(fetchNext: @escaping @Sendable () async throws -> Element?) {
+            init(fetchNext: @escaping @Sendable () async throws(Database.Error) -> Element?) {
                 self.fetchNext = fetchNext
             }
 
-            public mutating func next() async throws -> Element? {
+            public mutating func next() async throws(Database.Error) -> Element? {
                 guard !exhausted else { return nil }
 
                 if let element = try await fetchNext() {
@@ -41,14 +41,14 @@ extension Database {
         }
 
         /// Returns the next element from the cursor.
-        public func next() async throws -> Element? {
+        public func next() async throws(Database.Error) -> Element? {
             try await fetchNext()
         }
 
         /// Collects all remaining elements into an array.
         ///
         /// - Warning: This loads all remaining rows into memory.
-        public func fetchAll() async throws -> [Element] {
+        public func fetchAll() async throws(Database.Error) -> [Element] {
             var results: [Element] = []
             while let element = try await next() {
                 results.append(element)

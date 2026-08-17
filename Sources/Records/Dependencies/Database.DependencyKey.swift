@@ -18,7 +18,11 @@ extension Database {
     /// }
     /// ```
     public struct DependencyKey: Dependency.Key {
+        // Deliberate: heterogeneous dependency storage.
+        // swiftlint:disable:next no_any_protocol_existential
         public static let liveValue: any Writer = Unconfigured()
+        // Deliberate: heterogeneous dependency storage.
+        // swiftlint:disable:next no_any_protocol_existential
         public static let testValue: any Writer = Unconfigured()
     }
 }
@@ -37,7 +41,10 @@ extension Dependency.Values {
     ///     // Your app code
     /// }
     /// ```
-    public var defaultDatabase: any Database.Writer {
+    public var defaultDatabase:
+        // swiftlint:disable:next no_any_protocol_existential
+        any Database.Writer
+    {
         get { self[Database.DependencyKey.self] }
         set { self[Database.DependencyKey.self] = newValue }
     }
@@ -49,8 +56,11 @@ extension Database {
     /// A placeholder database that reports an error when used.
     fileprivate struct Unconfigured: Writer {
         func read<T: Sendable>(
-            _ block: @Sendable (any Database.Connection.`Protocol`) async throws -> T
-        ) async throws -> T {
+            _ block:
+                // swiftlint:disable:next no_any_protocol_existential
+                @Sendable (any Database.Connection.`Protocol`) async throws(Database.Error) ->
+                T
+        ) async throws(Database.Error) -> T {
             fatalError(
                 """
                 The defaultDatabase dependency has not been configured.
@@ -73,12 +83,15 @@ extension Database {
         }
 
         func write<T: Sendable>(
-            _ block: @Sendable (any Database.Connection.`Protocol`) async throws -> T
-        ) async throws -> T {
+            _ block:
+                // swiftlint:disable:next no_any_protocol_existential
+                @Sendable (any Database.Connection.`Protocol`) async throws(Database.Error) ->
+                T
+        ) async throws(Database.Error) -> T {
             try await read(block)
         }
 
-        func close() async throws {
+        func close() async throws(Database.Error) {
             fatalError("close() is not supported on this connection type")
         }
     }

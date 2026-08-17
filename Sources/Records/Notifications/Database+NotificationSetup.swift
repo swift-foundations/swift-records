@@ -51,7 +51,7 @@ extension Database.Connection.`Protocol` {
         on event: Database.Notification.TriggerEvent...,
         timing: Database.Notification.TriggerTiming = .after,
         includeOldValues: Bool = false
-    ) async throws -> Database.Notification.Channel<Schema.Payload> {
+    ) async throws(Database.Error) -> Database.Notification.Channel<Schema.Payload> {
         let events = Array(event)
         return try await setupNotificationChannel(
             for: Schema.TableType.self,
@@ -70,7 +70,7 @@ extension Database.Connection.`Protocol` {
         on events: [Database.Notification.TriggerEvent],
         timing: Database.Notification.TriggerTiming = .after,
         includeOldValues: Bool = false
-    ) async throws -> Database.Notification.Channel<Payload> {
+    ) async throws(Database.Error) -> Database.Notification.Channel<Payload> {
         print("📢 Setting up notification channel '\(channel.name)' for table '\(On.tableName)'")
 
         // 1. Create trigger function
@@ -120,7 +120,7 @@ extension Database.Connection.`Protocol` {
     /// - Throws: Database errors if removal fails
     public func removeNotificationChannel<Schema: Database.Notification.ChannelSchema>(
         schema: Schema.Type
-    ) async throws {
+    ) async throws(Database.Error) {
         let functionName = FunctionName(
             stringLiteral: "\(Schema.TableType.tableName)_\(Schema.channel.name.underlying)_notify"
         )
@@ -157,7 +157,7 @@ extension Database.Connection.`Protocol` {
         for table: On.Type,
         channel: ChannelName,
         includeOldValues: Bool
-    ) async throws {
+    ) async throws(Database.Error) {
         let functionName = FunctionName(
             stringLiteral: "\(On.tableName)_\(channel.underlying)_notify"
         )
@@ -195,7 +195,7 @@ extension Database.Connection.`Protocol` {
         print(
             "📢 Creating notification trigger function '\(functionName.underlying)' for channel '\(channel.underlying)'"
         )
-        do {
+        do throws(Database.Error) {
             try await execute(sql)
             print(
                 "✅ Successfully created notification trigger function '\(functionName.underlying)'"
@@ -219,7 +219,7 @@ extension Database.Connection.`Protocol` {
         channel: ChannelName,
         events: [Database.Notification.TriggerEvent],
         timing: Database.Notification.TriggerTiming
-    ) async throws {
+    ) async throws(Database.Error) {
         guard !events.isEmpty else {
             throw Database.Error.invalidNotificationChannels("At least one trigger event required")
         }
@@ -243,7 +243,7 @@ extension Database.Connection.`Protocol` {
         print(
             "📢 Creating notification trigger '\(triggerName.underlying)' on table '\(On.tableName)'"
         )
-        do {
+        do throws(Database.Error) {
             try await execute(sql)
             print("✅ Successfully created notification trigger '\(triggerName.underlying)'")
         } catch {
@@ -263,7 +263,7 @@ extension Database.Connection.`Protocol` {
         for table: On.Type,
         channel: ChannelName,
         ifExists: Bool
-    ) async throws {
+    ) async throws(Database.Error) {
         let triggerName = TriggerName(
             stringLiteral: "\(On.tableName)_\(channel.underlying)_trigger"
         )
@@ -273,7 +273,7 @@ extension Database.Connection.`Protocol` {
         print(
             "📢 Dropping notification trigger '\(triggerName.underlying)' from table '\(On.tableName)'"
         )
-        do {
+        do throws(Database.Error) {
             try await execute(sql)
             print("✅ Successfully dropped notification trigger '\(triggerName.underlying)'")
         } catch {
@@ -291,12 +291,12 @@ extension Database.Connection.`Protocol` {
     func dropNotificationTriggerFunction(
         name: FunctionName,
         ifExists: Bool
-    ) async throws {
+    ) async throws(Database.Error) {
         let ifExistsClause = ifExists ? "IF EXISTS " : ""
         let sql = "DROP FUNCTION \(ifExistsClause)\(name.quoted)()"
 
         print("📢 Dropping notification trigger function '\(name.underlying)'")
-        do {
+        do throws(Database.Error) {
             try await execute(sql)
             print("✅ Successfully dropped notification trigger function '\(name.underlying)'")
         } catch {
@@ -315,7 +315,7 @@ extension Database.Connection.`Protocol` {
 ///
 /// - Parameter channelName: The channel name to validate
 /// - Throws: Database.Error.invalidNotificationChannels if name contains invalid characters
-private func validateChannelName(_ channelName: String) throws {
+private func validateChannelName(_ channelName: String) throws(Database.Error) {
     let allowedCharacterSet = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_-"))
     guard channelName.unicodeScalars.allSatisfy({ allowedCharacterSet.contains($0) }) else {
         throw Database.Error.invalidNotificationChannels(

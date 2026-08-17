@@ -16,6 +16,7 @@ extension PostgresQuery {
             switch segment {
             case .sql(let sql):
                 sqlParts.append(sql)
+
             case .binding(let binding):
                 parameterIndex += 1
                 sqlParts.append("$\(parameterIndex)")
@@ -43,21 +44,27 @@ extension QueryFragment {
         switch binding {
         case .null:
             bindings.appendNull()
+
         case .int(let value):
             bindings.append(Int(value), context: .default)
+
         case .double(let value):
             bindings.append(value, context: .default)
+
         case .text(let value):
             bindings.append(value, context: .default)
+
         case .blob(let bytes):
             // Convert [Byte] to ByteBuffer for PostgreSQL bytea type
             var buffer = ByteBufferAllocator().buffer(capacity: bytes.count)
             buffer.writeBytes(bytes.map(\.underlying))
             bindings.append(buffer, context: .default)
+
         case .date(let instant):
             // PostgresNIO's timestamp codec is Foundation's Date; the core carries
             // the Foundation-free Instant, so it is lowered here.
             bindings.append(Foundation.Date(instant), context: .default)
+
         case .uuid(let identifier):
             // Likewise: the core carries 16 raw bytes, PostgresNIO wants a UUID.
             guard let uuid = Foundation.UUID(identifier) else {
@@ -68,17 +75,21 @@ extension QueryFragment {
                 break
             }
             bindings.append(uuid, context: .default)
+
         case .invalid(let error):
             // Log error and append null as fallback
             print("Warning: Invalid binding with error: \(error)")
             bindings.appendNull()
+
         case .bool(let value):
             // Use native PostgreSQL boolean type
             bindings.append(value, context: .default)
+
         case .jsonb(let bytes):
             // Use PostgresNIO's JSONB support
             let postgresData = PostgresData(jsonb: Data(bytes.map(\.underlying)))
             bindings.append(postgresData)
+
         case .decimal(let digits):
             // The core carries the value's exact digit string; PostgresNIO's NUMERIC
             // codec is Decimal, which is exactly what those digits were produced from
@@ -96,22 +107,31 @@ extension QueryFragment {
                 print("Warning: Failed to encode Decimal value: \(error)")
                 bindings.appendNull()
             }
+
         case .boolArray(let values):
             bindings.append(values, context: .default)
+
         case .stringArray(let values):
             bindings.append(values, context: .default)
+
         case .intArray(let values):
             bindings.append(values, context: .default)
+
         case .int16Array(let values):
             bindings.append(values, context: .default)
+
         case .int32Array(let values):
             bindings.append(values, context: .default)
+
         case .int64Array(let values):
             bindings.append(values, context: .default)
+
         case .floatArray(let values):
             bindings.append(values, context: .default)
+
         case .doubleArray(let values):
             bindings.append(values, context: .default)
+
         case .uuidArray(let identifiers):
             let uuids = identifiers.compactMap { Foundation.UUID($0) }
             guard uuids.count == identifiers.count else {
@@ -120,8 +140,10 @@ extension QueryFragment {
                 break
             }
             bindings.append(uuids, context: .default)
+
         case .dateArray(let instants):
             bindings.append(instants.map { Foundation.Date($0) }, context: .default)
+
         case .genericArray:
             // Generic arrays hold elements of mixed QueryBinding cases; PostgreSQL
             // has no heterogeneous array type, so there is no faithful native

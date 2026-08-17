@@ -26,5 +26,5 @@ public protocol NotificationCapable {
     ///
     /// Return `nil` if this database type doesn't support PostgreSQL notifications.
     /// This is an async property to support lazy initialization of test databases.
-    var postgresClient: PostgresClient? { get async throws }
+    var postgresClient: PostgresClient? { get async throws(Database.Error) }
 }

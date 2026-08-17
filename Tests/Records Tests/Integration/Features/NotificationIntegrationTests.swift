@@ -345,6 +345,7 @@ struct Test {
                             receivedCount == 0,
                             "Should fail on first message for: \(description)"
                         )
+
                     default:
                         Issue.record("Wrong error type for \(description): \(error)")
                     }
@@ -417,7 +418,7 @@ struct Test {
             try await database.withTransaction { db in
                 try await db.notify(channel: channel, payload: payload)
                 if !shouldCommit {
-                    throw CancellationError()
+                    throw Database.Error.queryFailed(underlying: CancellationError())
                 }
             }
         } catch {
@@ -438,6 +439,7 @@ struct Test {
             if expectedCount > 0 {
                 #expect(received[0] == payload)
             }
+
         case .failure:
             break
         }
@@ -545,6 +547,7 @@ struct Test {
                         hint.contains("reference ID"),
                         "Error hint should mention reference ID pattern"
                     )
+
                 default:
                     Issue.record("Wrong Database.Error type for \(description): \(error)")
                 }

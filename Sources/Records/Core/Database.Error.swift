@@ -47,6 +47,16 @@ extension Database {
         /// array type). The query is not executed.
         case invalidBinding(String)
 
+        /// A view definition contained parameterized queries, which PostgreSQL
+        /// cannot represent in a view. The statement is not executed.
+        case parameterizedView(ParameterizedViewError)
+
+        /// The underlying database driver reported a failure while executing a query.
+        case queryFailed(underlying: Swift.Error)
+
+        /// A result row could not be decoded into the requested Swift type.
+        case rowDecodingFailed(underlying: Swift.Error)
+
         /// Failed to decode notification payload.
         case notificationDecodingFailed(type: String, payload: String, underlying: Swift.Error)
 
@@ -101,6 +111,15 @@ extension Database {
 
             case .invalidBinding(let message):
                 return "Cannot bind value to statement: \(message)"
+
+            case .parameterizedView(let error):
+                return error.description
+
+            case .queryFailed(let error):
+                return "Query failed: \(error.localizedDescription)"
+
+            case .rowDecodingFailed(let error):
+                return "Failed to decode result row: \(error.localizedDescription)"
 
             case .notificationDecodingFailed(let type, let payload, let error):
                 return

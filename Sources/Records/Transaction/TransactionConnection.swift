@@ -7,6 +7,8 @@ extension Database {
     /// This connection wrapper allows tracking of transaction state and enables
     /// nested transaction support through savepoints.
     struct TransactionConnection: Database.Connection.`Protocol` {
+        // Deliberate: wraps any underlying connection at runtime.
+        // swiftlint:disable:next no_any_protocol_existential
         private let underlying: any Database.Connection.`Protocol`
         private(set) var transactionDepth: Int
 
@@ -16,6 +18,8 @@ extension Database {
         ///   - underlying: The underlying database connection.
         ///   - transactionDepth: The current transaction nesting depth (default 1).
         init(
+            // Deliberate: wraps any underlying connection at runtime.
+            // swiftlint:disable:next no_any_protocol_existential
             _ underlying: any Database.Connection.`Protocol`,
             transactionDepth: Int = 1
         ) {
@@ -30,39 +34,39 @@ extension Database {
 
         // MARK: - Database.Connection.Protocol Conformance
 
-        func execute(_ statement: some Statement<()>) async throws {
+        func execute(_ statement: some Statement<()>) async throws(Database.Error) {
             try await underlying.execute(statement)
         }
 
-        func execute(_ sql: String) async throws {
+        func execute(_ sql: String) async throws(Database.Error) {
             try await underlying.execute(sql)
         }
 
-        func executeFragment(_ fragment: QueryFragment) async throws {
+        func executeFragment(_ fragment: QueryFragment) async throws(Database.Error) {
             try await underlying.executeFragment(fragment)
         }
 
         func fetchAll<QueryValue: QueryRepresentable>(
             _ statement: some Statement<QueryValue>
-        ) async throws -> [QueryValue.QueryOutput] {
+        ) async throws(Database.Error) -> [QueryValue.QueryOutput] {
             try await underlying.fetchAll(statement)
         }
 
         func fetchAll<each V: QueryRepresentable>(
             _ statement: some Statement<(repeat each V)>
-        ) async throws -> [(repeat (each V).QueryOutput)] {
+        ) async throws(Database.Error) -> [(repeat (each V).QueryOutput)] {
             try await underlying.fetchAll(statement)
         }
 
         func fetchOne<QueryValue: QueryRepresentable>(
             _ statement: some Statement<QueryValue>
-        ) async throws -> QueryValue.QueryOutput? {
+        ) async throws(Database.Error) -> QueryValue.QueryOutput? {
             try await underlying.fetchOne(statement)
         }
 
         func fetchCursor<QueryValue: QueryRepresentable>(
             _ statement: some Statement<QueryValue>
-        ) async throws -> Database.Cursor<QueryValue.QueryOutput> {
+        ) async throws(Database.Error) -> Database.Cursor<QueryValue.QueryOutput> {
             try await underlying.fetchCursor(statement)
         }
     }
@@ -98,8 +102,10 @@ extension Database.TransactionConnection {
     /// - Returns: The value returned by the block.
     public func withNestedTransaction<T: Sendable>(
         isolation: TransactionIsolationLevel? = nil,
-        _ block: @Sendable (any Database.Connection.`Protocol`) async throws -> T
-    ) async throws -> T {
+        // Deliberate: runtime connection substitution.
+        // swiftlint:disable:next no_any_protocol_existential
+        _ block: @Sendable (any Database.Connection.`Protocol`) async throws(Database.Error) -> T
+    ) async throws(Database.Error) -> T {
         if isInTransaction {
             // Use savepoint for nested transaction
             let savepointName = "sp_\(UUID().uuidString.prefix(8))"
@@ -109,7 +115,7 @@ extension Database.TransactionConnection {
             try await execute(
                 "BEGIN ISOLATION LEVEL \(isolation?.rawValue ?? TransactionIsolationLevel.readCommitted.rawValue)"
             )
-            do {
+            do throws(Database.Error) {
                 let nestedConnection = Database.TransactionConnection(self, transactionDepth: 1)
                 let result = try await block(nestedConnection)
                 try await execute("COMMIT")
@@ -149,8 +155,10 @@ extension Database.TransactionConnection {
     /// - Returns: The value returned by the block.
     public func withSavepoint<T: Sendable>(
         _ name: String? = nil,
-        _ block: @Sendable (any Database.Connection.`Protocol`) async throws -> T
-    ) async throws -> T {
+        // Deliberate: runtime connection substitution.
+        // swiftlint:disable:next no_any_protocol_existential
+        _ block: @Sendable (any Database.Connection.`Protocol`) async throws(Database.Error) -> T
+    ) async throws(Database.Error) -> T {
         // Ring review R-05: savepoint names cannot be bound parameters, so the
         // identifier is validated and quoted before interpolation.
         let savepointName = try Database.quotedSavepointName(
@@ -158,7 +166,7 @@ extension Database.TransactionConnection {
         )
 
         try await execute("SAVEPOINT \(savepointName)")
-        do {
+        do throws(Database.Error) {
             let nestedConnection = Database.TransactionConnection(
                 underlying,
                 transactionDepth: transactionDepth + 1

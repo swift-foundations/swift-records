@@ -19,7 +19,7 @@ struct Test {
 
     @Test
     func `NOT NULL constraint violation`() async throws {
-        await #expect(throws: (any Error).self) {
+        await #expect(throws: (any Swift.Error).self) {
             try await db.write { db in
                 try await db.execute(
                     """
@@ -33,7 +33,7 @@ struct Test {
 
     @Test
     func `Foreign key constraint violation`() async throws {
-        await #expect(throws: (any Error).self) {
+        await #expect(throws: (any Swift.Error).self) {
             try await db.write { db in
                 try await Reminder.insert {
                     Reminder.Draft(
@@ -67,7 +67,7 @@ struct Test {
         }
 
         // Try to insert duplicate - should fail
-        await #expect(throws: (any Error).self) {
+        await #expect(throws: (any Swift.Error).self) {
             try await db.write { db in
                 try await db.execute(
                     """
@@ -98,7 +98,7 @@ struct Test {
         }
 
         // Try to insert invalid age - should fail
-        await #expect(throws: (any Error).self) {
+        await #expect(throws: (any Swift.Error).self) {
             try await db.write { db in
                 try await db.execute(
                     """
@@ -108,7 +108,7 @@ struct Test {
             }
         }
 
-        await #expect(throws: (any Error).self) {
+        await #expect(throws: (any Swift.Error).self) {
             try await db.write { db in
                 try await db.execute(
                     """
@@ -128,7 +128,7 @@ struct Test {
 
     @Test
     func `Type mismatch - text as integer`() async throws {
-        await #expect(throws: (any Error).self) {
+        await #expect(throws: (any Swift.Error).self) {
             try await db.write { db in
                 try await db.execute(
                     """
@@ -142,7 +142,7 @@ struct Test {
 
     @Test
     func `Type mismatch - invalid date format`() async throws {
-        await #expect(throws: (any Error).self) {
+        await #expect(throws: (any Swift.Error).self) {
             try await db.write { db in
                 try await db.execute(
                     """
@@ -158,7 +158,7 @@ struct Test {
 
     @Test
     func `SQL syntax error`() async throws {
-        await #expect(throws: (any Error).self) {
+        await #expect(throws: (any Swift.Error).self) {
             try await db.read { db in
                 try await db.execute("INVALID SQL SYNTAX")
             }
@@ -167,7 +167,7 @@ struct Test {
 
     @Test
     func `Non-existent table`() async throws {
-        await #expect(throws: (any Error).self) {
+        await #expect(throws: (any Swift.Error).self) {
             try await db.read { db in
                 try await db.execute("SELECT * FROM nonexistent_table")
             }
@@ -176,7 +176,7 @@ struct Test {
 
     @Test
     func `Non-existent column`() async throws {
-        await #expect(throws: (any Error).self) {
+        await #expect(throws: (any Swift.Error).self) {
             try await db.read { db in
                 try await db.execute("SELECT nonexistent_column FROM reminders")
             }
@@ -305,7 +305,7 @@ struct Test {
         }
 
         // Try to manually set title to NULL (bypassing type safety)
-        await #expect(throws: (any Error).self) {
+        await #expect(throws: (any Swift.Error).self) {
             try await db.write { db in
                 try await db.execute(
                     """
@@ -417,7 +417,7 @@ struct Test {
 
     @Test
     func `Division by zero`() async throws {
-        await #expect(throws: (any Error).self) {
+        await #expect(throws: (any Swift.Error).self) {
             try await db.read { db in
                 try await db.execute("SELECT 1 / 0")
             }
@@ -468,7 +468,7 @@ struct Test {
     @Test(.disabled("Requires timeout configuration"))
     func `Query timeout`() async throws {
         // Would require setting up a very slow query and timeout configuration
-        // await #expect(throws: (any Error).self) {
+        // await #expect(throws: (any Swift.Error).self) {
         //     try await db.read { db in
         //         try await db.execute("SELECT pg_sleep(100)")
         //     }

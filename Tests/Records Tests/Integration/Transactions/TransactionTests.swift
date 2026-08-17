@@ -120,10 +120,10 @@ struct Test {
                 .returning(\.id)
                 .fetchOne(db)
 
-                throw TestError.intentionalRollback
+                throw Database.Error.intentionalRollback
             }
             Issue.record("Transaction should have rolled back")
-        } catch TestError.intentionalRollback {
+        } catch  where error.isIntentionalRollback {
             // Expected
         }
 
@@ -164,10 +164,10 @@ struct Test {
                     .returning(\.id)
                     .fetchOne(db)
 
-                    throw TestError.intentionalRollback
+                    throw Database.Error.intentionalRollback
                 }
                 Issue.record("Savepoint should have rolled back")
-            } catch TestError.intentionalRollback {
+            } catch  where error.isIntentionalRollback {
                 // Expected
             }
 
@@ -275,9 +275,9 @@ struct Test {
                     }
                     .execute(db)
 
-                    throw TestError.intentionalRollback
+                    throw Database.Error.intentionalRollback
                 }
-            } catch TestError.intentionalRollback {
+            } catch  where error.isIntentionalRollback {
                 // Expected - nested transaction rolled back
             }
 
@@ -339,7 +339,7 @@ struct Test {
                         .fetchCount(innerDb)
                     #expect(innerCount == 1)
 
-                    throw TestError.intentionalRollback
+                    throw Database.Error.intentionalRollback
                 }
             }()
 
@@ -395,12 +395,12 @@ struct Test {
 
                         // Fail even attempts
                         if i % 2 == 0 {
-                            throw TestError.intentionalRollback
+                            throw Database.Error.intentionalRollback
                         }
                     }
                     // Only record success if no error thrown
                     attempts.append("Attempt \(i)")
-                } catch TestError.intentionalRollback {
+                } catch  where error.isIntentionalRollback {
                     // Continue with next attempt
                 }
             }
@@ -452,10 +452,27 @@ struct Test {
         #expect(count == 100)
     }
 
-    // MARK: - Helpers
+}
 
-    enum TestError: Error {
-        case intentionalRollback
+// MARK: - Helpers
+
+/// Marker error used to force rollbacks in tests.
+enum TestError: Swift.Error, Equatable {
+    case intentionalRollback
+}
+
+extension Database.Error {
+    /// A ``Database/Error`` carrying the test rollback marker, so typed
+    /// transaction blocks can force a rollback that tests can recognize.
+    static var intentionalRollback: Database.Error {
+        .queryFailed(underlying: TestError.intentionalRollback)
+    }
+
+    var isIntentionalRollback: Bool {
+        if case .queryFailed(let underlying) = self {
+            return underlying as? TestError == .intentionalRollback
+        }
+        return false
     }
 }
 

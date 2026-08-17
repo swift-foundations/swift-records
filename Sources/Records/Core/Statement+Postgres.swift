@@ -41,11 +41,11 @@ extension TemporaryView {
     /// - Parameter db: A database connection.
     /// - Throws: `ParameterizedViewError` if the view contains parameterized queries.
     @inlinable
-    public func execute(_ db: any Database.Connection.`Protocol`) async throws {
+    public func execute(_ db: some Database.Connection.`Protocol`) async throws(Database.Error) {
         let (sql, bindings) = query.prepare { "$\($0)" }
 
         guard bindings.isEmpty else {
-            throw ParameterizedViewError(parameterCount: bindings.count, sql: sql)
+            throw .parameterizedView(.init(parameterCount: bindings.count, sql: sql))
         }
 
         try await db.execute(sql)
@@ -70,7 +70,7 @@ extension Statement {
     ///
     /// - Parameter db: A database connection.
     @inlinable
-    public func execute(_ db: any Database.Connection.`Protocol`) async throws
+    public func execute(_ db: some Database.Connection.`Protocol`) async throws(Database.Error)
     where QueryValue == () {
         try await db.execute(self)
     }
@@ -94,8 +94,8 @@ extension Statement {
     /// - Returns: An array of all values decoded from the database.
     @inlinable
     public func fetchAll(
-        _ db: any Database.Connection.`Protocol`
-    ) async throws -> [QueryValue.QueryOutput]
+        _ db: some Database.Connection.`Protocol`
+    ) async throws(Database.Error) -> [QueryValue.QueryOutput]
     where QueryValue: QueryRepresentable {
         try await db.fetchAll(self)
     }
@@ -120,8 +120,8 @@ extension Statement {
     /// - Returns: An array of tuples matching the statement's column types.
     @inlinable
     public func fetchAll<each V: QueryRepresentable>(
-        _ db: any Database.Connection.`Protocol`
-    ) async throws -> [(repeat (each V).QueryOutput)]
+        _ db: some Database.Connection.`Protocol`
+    ) async throws(Database.Error) -> [(repeat (each V).QueryOutput)]
     where QueryValue == (repeat each V) {
         try await db.fetchAll(self)
     }
@@ -146,8 +146,9 @@ extension Statement {
     /// - Parameter db: A database connection.
     /// - Returns: A single value decoded from the database.
     @inlinable
-    public func fetchOne(_ db: any Database.Connection.`Protocol`) async throws -> QueryValue
-        .QueryOutput?
+    public func fetchOne(
+        _ db: some Database.Connection.`Protocol`
+    ) async throws(Database.Error) -> QueryValue.QueryOutput?
     where QueryValue: QueryRepresentable {
         try await db.fetchOne(self)
     }
@@ -159,7 +160,11 @@ extension SelectStatement where QueryValue == (), Joins == () {
     /// - Parameter db: A database connection.
     /// - Returns: The number of rows fetched by the query.
     @inlinable
-    public func fetchCount(_ db: any Database.Connection.`Protocol`) async throws -> Int {
+    public func fetchCount(
+        _ db: some Database.Connection.`Protocol`
+    ) async throws(Database.Error)
+        -> Int
+    {
         let query = asSelect().select { _ in AggregateFunction<Int>.count() }
         return try await query.fetchOne(db) ?? 0
     }
@@ -173,8 +178,9 @@ extension SelectStatement where QueryValue == (), Joins == () {
     /// - Parameter db: A database connection.
     /// - Returns: An array of all values decoded from the database.
     @inlinable
-    public func fetchAll(_ db: any Database.Connection.`Protocol`) async throws -> [From
-        .QueryOutput]
+    public func fetchAll(
+        _ db: some Database.Connection.`Protocol`
+    ) async throws(Database.Error) -> [From.QueryOutput]
     where From: QueryRepresentable {
         // Use selectStar() to select all columns from the From table
         // This returns Select<From, From, ()> where QueryValue = From
@@ -189,7 +195,9 @@ extension SelectStatement where QueryValue == (), Joins == () {
     /// - Parameter db: A database connection.
     /// - Returns: A single value decoded from the database.
     @inlinable
-    public func fetchOne(_ db: any Database.Connection.`Protocol`) async throws -> From.QueryOutput?
+    public func fetchOne(
+        _ db: some Database.Connection.`Protocol`
+    ) async throws(Database.Error) -> From.QueryOutput?
     where From: QueryRepresentable {
         // Use selectStar() to select all columns from the From table
         let query = self.selectStar().limit(1)

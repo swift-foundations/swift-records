@@ -28,8 +28,10 @@ extension Database {
         }
 
         public func read<T: Sendable>(
-            _ block: @Sendable (any Database.Connection.`Protocol`) async throws -> T
-        ) async throws -> T {
+            _ block:
+                @Sendable (any Database.Connection.`Protocol`) async throws(Database.Error) ->
+                T
+        ) async throws(Database.Error) -> T {
             try await wrapped.read { db in
                 // Ensure schema is set for this connection
                 try await db.execute("SET search_path TO \(schemaName)")
@@ -38,8 +40,10 @@ extension Database {
         }
 
         public func write<T: Sendable>(
-            _ block: @Sendable (any Database.Connection.`Protocol`) async throws -> T
-        ) async throws -> T {
+            _ block:
+                @Sendable (any Database.Connection.`Protocol`) async throws(Database.Error) ->
+                T
+        ) async throws(Database.Error) -> T {
             try await wrapped.write { db in
                 // Ensure schema is set for this connection
                 try await db.execute("SET search_path TO \(schemaName)")
@@ -47,7 +51,7 @@ extension Database {
             }
         }
 
-        public func close() async throws {
+        public func close() async throws(Database.Error) {
             // No-op: Schemas persist for process lifetime (intentional for tests)
             // Cleanup would cause hangs during process exit
         }

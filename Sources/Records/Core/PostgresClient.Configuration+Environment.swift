@@ -16,6 +16,7 @@ extension Database {
             switch self {
             case .missingEnvironmentVariable(let key):
                 return "Missing required environment variable: \(key)"
+
             case .invalidPort(let value):
                 return "Invalid port value: \(value)"
             }
@@ -58,7 +59,9 @@ extension PostgresClient.Configuration {
     ///
     /// - Returns: A configuration built from environment variables.
     /// - Throws: ``Database.ConfigurationError`` if required environment variables are missing or invalid.
-    public static func fromEnvironment() throws -> Database.Configuration {
+    public static func fromEnvironment() throws(Database.ConfigurationError)
+        -> Database.Configuration
+    {
         @Dependency(\.envVars) var envVars
 
         // Get host

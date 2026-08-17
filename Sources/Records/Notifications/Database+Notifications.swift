@@ -11,7 +11,14 @@ extension Database {
     ///
     /// This is a simple typealias because AsyncThrowingStream handles cleanup automatically
     /// via its `onTermination` callback - no manual lifecycle management needed.
-    typealias RawNotificationStream = AsyncThrowingStream<Notification, any Swift.Error>
+    ///
+    /// The failure type is deliberately the `Swift.Error` existential:
+    /// `AsyncThrowingStream` continuations require `Failure == any Swift.Error`.
+    public typealias RawNotificationStream = AsyncThrowingStream<
+        Notification,
+        // swiftlint:disable:next no_any_protocol_existential
+        any Swift.Error
+    >
 
     /// A stream of typed notifications with automatic JSON decoding.
     ///
@@ -39,11 +46,11 @@ extension Database {
     public struct NotificationStream<Payload: Decodable & Sendable>: AsyncSequence, Sendable {
         public typealias Element = Payload
 
-        private let base: AsyncThrowingStream<Notification, any Swift.Error>
+        private let base: Database.RawNotificationStream
         private let decoder: JSONDecoder
 
         init(
-            base: AsyncThrowingStream<Notification, any Swift.Error>,
+            base: Database.RawNotificationStream,
             decoder: JSONDecoder = JSONDecoder()
         ) {
             self.base = base
@@ -55,19 +62,27 @@ extension Database {
         }
 
         public struct AsyncIterator: AsyncIteratorProtocol {
-            private var base: AsyncThrowingStream<Notification, any Swift.Error>.AsyncIterator
+            private var base: Database.RawNotificationStream.AsyncIterator
             private let decoder: JSONDecoder
 
             init(
-                base: AsyncThrowingStream<Notification, any Swift.Error>.AsyncIterator,
+                base: Database.RawNotificationStream.AsyncIterator,
                 decoder: JSONDecoder
             ) {
                 self.base = base
                 self.decoder = decoder
             }
 
-            public mutating func next() async throws -> Payload? {
-                guard let notification = try await base.next() else {
+            public mutating func next() async throws(Database.Error) -> Payload? {
+                let next: Notification?
+                do {
+                    next = try await base.next()
+                } catch let error as Database.Error {
+                    throw error
+                } catch {
+                    throw .queryFailed(underlying: error)
+                }
+                guard let notification = next else {
                     return nil
                 }
 
@@ -113,11 +128,11 @@ extension Database {
     public struct NotificationEventStream<Payload: Decodable & Sendable>: AsyncSequence, Sendable {
         public typealias Element = NotificationEvent<Payload>
 
-        private let base: AsyncThrowingStream<Notification, any Swift.Error>
+        private let base: Database.RawNotificationStream
         private let decoder: JSONDecoder
 
         init(
-            base: AsyncThrowingStream<Notification, any Swift.Error>,
+            base: Database.RawNotificationStream,
             decoder: JSONDecoder = JSONDecoder()
         ) {
             self.base = base
@@ -129,19 +144,29 @@ extension Database {
         }
 
         public struct AsyncIterator: AsyncIteratorProtocol {
-            private var base: AsyncThrowingStream<Notification, any Swift.Error>.AsyncIterator
+            private var base: Database.RawNotificationStream.AsyncIterator
             private let decoder: JSONDecoder
 
             init(
-                base: AsyncThrowingStream<Notification, any Swift.Error>.AsyncIterator,
+                base: Database.RawNotificationStream.AsyncIterator,
                 decoder: JSONDecoder
             ) {
                 self.base = base
                 self.decoder = decoder
             }
 
-            public mutating func next() async throws -> NotificationEvent<Payload>? {
-                guard let notification = try await base.next() else {
+            public mutating func next() async throws(Database.Error)
+                -> NotificationEvent<Payload>?
+            {
+                let next: Notification?
+                do {
+                    next = try await base.next()
+                } catch let error as Database.Error {
+                    throw error
+                } catch {
+                    throw .queryFailed(underlying: error)
+                }
+                guard let notification = next else {
                     return nil
                 }
 
@@ -210,9 +235,9 @@ extension Database.Reader {
         on channel: ChannelName,
         expecting type: Payload.Type = Payload.self,
         decoder: JSONDecoder = JSONDecoder(),
-        bufferStrategy: AsyncThrowingStream<Database.Notification, any Swift.Error>.Continuation
-            .BufferingPolicy = .bufferingNewest(100)
-    ) async throws -> Database.NotificationStream<Payload> {
+        bufferStrategy: Database.RawNotificationStream.Continuation.BufferingPolicy =
+            .bufferingNewest(100)
+    ) async throws(Database.Error) -> Database.NotificationStream<Payload> {
         try await _notifications(
             channel: channel.underlying,
             decoder: decoder,
@@ -258,7 +283,7 @@ extension Database.Reader {
     public func notifications<Payload>(
         on channel: Database.Notification.Channel<Payload>,
         decoder: JSONDecoder = JSONDecoder()
-    ) async throws -> Database.NotificationStream<Payload> {
+    ) async throws(Database.Error) -> Database.NotificationStream<Payload> {
         try await notifications(on: channel.name, expecting: Payload.self, decoder: decoder)
     }
 
@@ -301,7 +326,7 @@ extension Database.Reader {
     public func notifications<Schema: Database.Notification.ChannelSchema>(
         from schema: Schema.Type,
         decoder: JSONDecoder = JSONDecoder()
-    ) async throws -> Database.NotificationStream<Schema.Payload> {
+    ) async throws(Database.Error) -> Database.NotificationStream<Schema.Payload> {
         try await notifications(
             on: Schema.channelName,
             expecting: Schema.Payload.self,
@@ -351,9 +376,9 @@ extension Database.Reader {
         on channel: ChannelName,
         expecting type: Payload.Type = Payload.self,
         decoder: JSONDecoder = JSONDecoder(),
-        bufferStrategy: AsyncThrowingStream<Database.Notification, any Swift.Error>.Continuation
-            .BufferingPolicy = .bufferingNewest(100)
-    ) async throws -> Database.NotificationEventStream<Payload> {
+        bufferStrategy: Database.RawNotificationStream.Continuation.BufferingPolicy =
+            .bufferingNewest(100)
+    ) async throws(Database.Error) -> Database.NotificationEventStream<Payload> {
         try await _notificationEvents(
             channel: channel.underlying,
             decoder: decoder,
@@ -373,7 +398,7 @@ extension Database.Reader {
     public func notificationEvents<Payload>(
         on channel: Database.Notification.Channel<Payload>,
         decoder: JSONDecoder = JSONDecoder()
-    ) async throws -> Database.NotificationEventStream<Payload> {
+    ) async throws(Database.Error) -> Database.NotificationEventStream<Payload> {
         try await notificationEvents(on: channel.name, expecting: Payload.self, decoder: decoder)
     }
 
@@ -389,7 +414,7 @@ extension Database.Reader {
     public func notificationEvents<Schema: Database.Notification.ChannelSchema>(
         from schema: Schema.Type,
         decoder: JSONDecoder = JSONDecoder()
-    ) async throws -> Database.NotificationEventStream<Schema.Payload> {
+    ) async throws(Database.Error) -> Database.NotificationEventStream<Schema.Payload> {
         try await notificationEvents(
             on: Schema.channelName,
             expecting: Schema.Payload.self,
@@ -407,9 +432,8 @@ extension Database.Reader {
     private func _notifications<Payload: Decodable & Sendable>(
         channel: String,
         decoder: JSONDecoder,
-        bufferStrategy: AsyncThrowingStream<Database.Notification, any Swift.Error>.Continuation
-            .BufferingPolicy
-    ) async throws -> Database.NotificationStream<Payload> {
+        bufferStrategy: Database.RawNotificationStream.Continuation.BufferingPolicy
+    ) async throws(Database.Error) -> Database.NotificationStream<Payload> {
 
         // Get the raw notification stream (primitive)
         let (rawStream, ready) = try await _rawNotifications(
@@ -442,9 +466,8 @@ extension Database.Reader {
     private func _notificationEvents<Payload: Decodable & Sendable>(
         channel: String,
         decoder: JSONDecoder,
-        bufferStrategy: AsyncThrowingStream<Database.Notification, any Swift.Error>.Continuation
-            .BufferingPolicy
-    ) async throws -> Database.NotificationEventStream<Payload> {
+        bufferStrategy: Database.RawNotificationStream.Continuation.BufferingPolicy
+    ) async throws(Database.Error) -> Database.NotificationEventStream<Payload> {
 
         // Get the raw notification stream (primitive)
         let (rawStream, ready) = try await _rawNotifications(
@@ -475,10 +498,9 @@ extension Database.Reader {
     /// and `NotificationEventStream` compose upon.
     private func _rawNotifications(
         channel: String,
-        bufferStrategy: AsyncThrowingStream<Database.Notification, any Swift.Error>.Continuation
-            .BufferingPolicy
-    ) async throws -> (
-        stream: AsyncThrowingStream<Database.Notification, any Swift.Error>,
+        bufferStrategy: Database.RawNotificationStream.Continuation.BufferingPolicy
+    ) async throws(Database.Error) -> (
+        stream: Database.RawNotificationStream,
         ready: AsyncStream<Void>
     ) {
 
@@ -507,7 +529,7 @@ extension Database.Reader {
         // Default buffering strategy: keep newest 100 notifications, drop oldest on overflow
         // This prevents memory exhaustion if notifications arrive faster than consumption
         // Users can customize this via the bufferStrategy parameter
-        let notificationStream = AsyncThrowingStream<Database.Notification, any Swift.Error>(
+        let notificationStream = Database.RawNotificationStream(
             bufferingPolicy: bufferStrategy
         ) { continuation in
             // This task is tied to the stream's lifetime via onTermination
@@ -544,7 +566,7 @@ extension Database.Reader {
                         // Keep the connection alive indefinitely until cancelled
                         // This will be cancelled when the stream consumer stops iterating
                         try await withUnsafeThrowingContinuation {
-                            (_: UnsafeContinuation<Void, Error>) in
+                            (_: UnsafeContinuation<Void, Swift.Error>) in
                             // Never resume - only cancelled via task cancellation
                         }
 
@@ -620,7 +642,7 @@ extension Database.Writer {
     public func notify(
         channel: ChannelName,
         payload: String
-    ) async throws {
+    ) async throws(Database.Error) {
         try await write { db in
             // Escape single quotes in payload for SQL safety
             let escapedPayload = payload.replacingOccurrences(of: "'", with: "''")
@@ -660,8 +682,15 @@ extension Database.Writer {
         channel: ChannelName,
         payload: Payload,
         encoder: JSONEncoder = JSONEncoder()
-    ) async throws {
-        let data = try encoder.encode(payload)
+    ) async throws(Database.Error) {
+        let data: Data
+        do {
+            data = try encoder.encode(payload)
+        } catch {
+            throw .invalidNotificationPayload(
+                "Failed to encode payload as JSON: \(error)"
+            )
+        }
         guard let json = String(data: data, encoding: .utf8) else {
             throw Database.Error.invalidNotificationPayload(
                 "Failed to encode payload to UTF-8 JSON string"
@@ -698,7 +727,7 @@ extension Database.Writer {
     ///
     /// - Parameter channel: The type-safe PostgreSQL channel name
     /// - Throws: Database errors if the NOTIFY command fails
-    public func notify(channel: ChannelName) async throws {
+    public func notify(channel: ChannelName) async throws(Database.Error) {
         try await write { db in
             try await db.execute("NOTIFY \(channel.quoted)")
         }
@@ -736,7 +765,7 @@ extension Database.Writer {
         channel: Database.Notification.Channel<Payload>,
         payload: Payload,
         encoder: JSONEncoder = JSONEncoder()
-    ) async throws {
+    ) async throws(Database.Error) {
         try await notify(channel: channel.name, payload: payload, encoder: encoder)
     }
 
@@ -772,7 +801,7 @@ extension Database.Writer {
         schema: Schema.Type,
         payload: Schema.Payload,
         encoder: JSONEncoder = JSONEncoder()
-    ) async throws {
+    ) async throws(Database.Error) {
         try await notify(channel: Schema.channelName, payload: payload, encoder: encoder)
     }
 
@@ -792,7 +821,7 @@ extension Database.Writer {
     /// - Throws: Database errors if the NOTIFY command fails
     public func notify<Payload>(
         channel: Database.Notification.Channel<Payload>
-    ) async throws {
+    ) async throws(Database.Error) {
         try await notify(channel: channel.name)
     }
 }
@@ -812,7 +841,7 @@ extension Database.Connection.`Protocol` {
     public func notify(
         channel: ChannelName,
         payload: String
-    ) async throws {
+    ) async throws(Database.Error) {
         let escapedPayload = payload.replacingOccurrences(of: "'", with: "''")
         try await execute("NOTIFY \(channel.quoted), '\(escapedPayload)'")
     }
@@ -830,8 +859,15 @@ extension Database.Connection.`Protocol` {
         channel: ChannelName,
         payload: Payload,
         encoder: JSONEncoder = JSONEncoder()
-    ) async throws {
-        let data = try encoder.encode(payload)
+    ) async throws(Database.Error) {
+        let data: Data
+        do {
+            data = try encoder.encode(payload)
+        } catch {
+            throw .invalidNotificationPayload(
+                "Failed to encode payload as JSON: \(error)"
+            )
+        }
         guard let json = String(data: data, encoding: .utf8) else {
             throw Database.Error.invalidNotificationPayload(
                 "Failed to encode payload to UTF-8 JSON string"
@@ -857,7 +893,7 @@ extension Database.Connection.`Protocol` {
     ///
     /// - Parameter channel: The type-safe PostgreSQL channel name
     /// - Throws: Database errors if the NOTIFY command fails
-    public func notify(channel: ChannelName) async throws {
+    public func notify(channel: ChannelName) async throws(Database.Error) {
         try await execute("NOTIFY \(channel.quoted)")
     }
 
@@ -874,7 +910,7 @@ extension Database.Connection.`Protocol` {
         channel: Database.Notification.Channel<Payload>,
         payload: Payload,
         encoder: JSONEncoder = JSONEncoder()
-    ) async throws {
+    ) async throws(Database.Error) {
         try await notify(channel: channel.name, payload: payload, encoder: encoder)
     }
 
@@ -889,7 +925,7 @@ extension Database.Connection.`Protocol` {
         schema: Schema.Type,
         payload: Schema.Payload,
         encoder: JSONEncoder = JSONEncoder()
-    ) async throws {
+    ) async throws(Database.Error) {
         try await notify(channel: Schema.channelName, payload: payload, encoder: encoder)
     }
 
@@ -899,7 +935,7 @@ extension Database.Connection.`Protocol` {
     /// - Throws: Database errors if the NOTIFY command fails
     public func notify<Payload>(
         channel: Database.Notification.Channel<Payload>
-    ) async throws {
+    ) async throws(Database.Error) {
         try await notify(channel: channel.name)
     }
 }

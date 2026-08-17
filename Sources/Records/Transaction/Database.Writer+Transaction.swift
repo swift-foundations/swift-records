@@ -20,11 +20,13 @@ extension Database.Writer {
     /// - Returns: The value returned by the block.
     public func withTransaction<T: Sendable>(
         isolation: TransactionIsolationLevel = .readCommitted,
-        _ block: @Sendable (any Database.Connection.`Protocol`) async throws -> T
-    ) async throws -> T {
+        // Deliberate: runtime connection substitution.
+        // swiftlint:disable:next no_any_protocol_existential
+        _ block: @Sendable (any Database.Connection.`Protocol`) async throws(Database.Error) -> T
+    ) async throws(Database.Error) -> T {
         try await write { db in
             try await db.execute("BEGIN ISOLATION LEVEL \(isolation.rawValue)")
-            do {
+            do throws(Database.Error) {
                 let result = try await block(Database.TransactionConnection(db))
                 try await db.execute("COMMIT")
                 return result
@@ -54,11 +56,13 @@ extension Database.Writer {
     /// - Parameter block: The operations to perform within the transaction.
     /// - Returns: The value returned by the block.
     public func withRollback<T: Sendable>(
-        _ block: @Sendable (any Database.Connection.`Protocol`) async throws -> T
-    ) async throws -> T {
+        // Deliberate: runtime connection substitution.
+        // swiftlint:disable:next no_any_protocol_existential
+        _ block: @Sendable (any Database.Connection.`Protocol`) async throws(Database.Error) -> T
+    ) async throws(Database.Error) -> T {
         try await write { db in
             try await db.execute("BEGIN")
-            do {
+            do throws(Database.Error) {
                 let result = try await block(db)
                 try await db.execute("ROLLBACK")
                 return result
@@ -99,9 +103,11 @@ extension Database.Writer {
     /// - Returns: The value returned by the block.
     public func withNestedTransaction<T: Sendable>(
         isolation: TransactionIsolationLevel? = nil,
-        _ block: @Sendable (any Database.Connection.`Protocol`) async throws -> T
-    ) async throws -> T {
-        do {
+        // Deliberate: runtime connection substitution.
+        // swiftlint:disable:next no_any_protocol_existential
+        _ block: @Sendable (any Database.Connection.`Protocol`) async throws(Database.Error) -> T
+    ) async throws(Database.Error) -> T {
+        do throws(Database.Error) {
             // This method will be overridden by TransactionConnection
             // For non-transaction connections, start a new transaction
             return try await withTransaction(
@@ -149,8 +155,10 @@ extension Database.Writer {
     /// - Returns: The value returned by the block.
     public func withSavepoint<T: Sendable>(
         _ name: String? = nil,
-        _ block: @Sendable (any Database.Connection.`Protocol`) async throws -> T
-    ) async throws -> T {
+        // Deliberate: runtime connection substitution.
+        // swiftlint:disable:next no_any_protocol_existential
+        _ block: @Sendable (any Database.Connection.`Protocol`) async throws(Database.Error) -> T
+    ) async throws(Database.Error) -> T {
         // Ring review R-05: savepoint names cannot be bound parameters, so the
         // identifier is validated and quoted before interpolation.
         let savepointName = try Database.quotedSavepointName(
@@ -159,7 +167,7 @@ extension Database.Writer {
 
         return try await write { db in
             try await db.execute("SAVEPOINT \(savepointName)")
-            do {
+            do throws(Database.Error) {
                 let result = try await block(db)
                 try await db.execute("RELEASE SAVEPOINT \(savepointName)")
                 return result
@@ -185,14 +193,14 @@ extension Database {
     /// - Parameter name: The savepoint name to validate.
     /// - Returns: The quoted identifier, safe to interpolate into savepoint statements.
     /// - Throws: ``Database/Error/invalidSavepointName(_:)`` if validation fails.
-    package static func quotedSavepointName(_ name: String) throws -> String {
+    package static func quotedSavepointName(_ name: String) throws(Database.Error) -> String {
         let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_-"))
         guard
             !name.isEmpty,
             name.count <= 63,
             name.unicodeScalars.allSatisfy({ allowed.contains($0) })
         else {
-            throw Database.Error.invalidSavepointName(name)
+            throw .invalidSavepointName(name)
         }
         return "\"\(name)\""
     }

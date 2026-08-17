@@ -71,8 +71,17 @@ extension Database.Notification {
         ///   - encoder: The JSON encoder to use (default: JSONEncoder())
         /// - Throws: Encoding errors if the value cannot be serialized
         @inlinable
-        public init<T: Encodable>(encoding value: T, encoder: JSONEncoder = JSONEncoder()) throws {
-            self.utf8Data = try encoder.encode(value)
+        public init<T: Encodable>(
+            encoding value: T,
+            encoder: JSONEncoder = JSONEncoder()
+        ) throws(Database.Error) {
+            do {
+                self.utf8Data = try encoder.encode(value)
+            } catch {
+                throw .invalidNotificationPayload(
+                    "Failed to encode payload as JSON: \(error)"
+                )
+            }
         }
 
         /// Decodes the payload as JSON.
@@ -88,8 +97,16 @@ extension Database.Notification {
         public func decode<T: Decodable>(
             as type: T.Type = T.self,
             decoder: JSONDecoder = JSONDecoder()
-        ) throws -> T {
-            try decoder.decode(T.self, from: utf8Data)
+        ) throws(Database.Error) -> T {
+            do {
+                return try decoder.decode(T.self, from: utf8Data)
+            } catch {
+                throw .notificationDecodingFailed(
+                    type: String(describing: T.self),
+                    payload: String(decoding: utf8Data, as: UTF8.self),
+                    underlying: error
+                )
+            }
         }
     }
 }

@@ -41,7 +41,7 @@ extension Database.Connection {
         ///     User.delete().where { $0.isDeleted }
         /// )
         /// ```
-        func execute(_ statement: some Statement<()>) async throws
+        func execute(_ statement: some Statement<()>) async throws(Database.Error)
 
         /// Executes a raw SQL string.
         ///
@@ -58,14 +58,14 @@ extension Database.Connection {
         ///     ON users(email)
         /// """)
         /// ```
-        func execute(_ sql: String) async throws
+        func execute(_ sql: String) async throws(Database.Error)
 
         /// Executes a query fragment.
         ///
         /// This is a low-level method primarily used internally.
         ///
         /// - Parameter fragment: The query fragment to execute.
-        func executeFragment(_ fragment: QueryFragment) async throws
+        func executeFragment(_ fragment: QueryFragment) async throws(Database.Error)
 
         /// Fetches all results from a statement.
         ///
@@ -84,7 +84,7 @@ extension Database.Connection {
         /// ```
         func fetchAll<QueryValue: QueryRepresentable>(
             _ statement: some Statement<QueryValue>
-        ) async throws -> [QueryValue.QueryOutput]
+        ) async throws(Database.Error) -> [QueryValue.QueryOutput]
 
         /// Parameter pack overload for fetching tuples of QueryRepresentable types.
         ///
@@ -94,7 +94,7 @@ extension Database.Connection {
         /// - Returns: An array of tuples matching the statement's column types.
         func fetchAll<each V: QueryRepresentable>(
             _ statement: some Statement<(repeat each V)>
-        ) async throws -> [(repeat (each V).QueryOutput)]
+        ) async throws(Database.Error) -> [(repeat (each V).QueryOutput)]
 
         /// Fetches a single result from a statement.
         ///
@@ -113,7 +113,7 @@ extension Database.Connection {
         /// ```
         func fetchOne<QueryValue: QueryRepresentable>(
             _ statement: some Statement<QueryValue>
-        ) async throws -> QueryValue.QueryOutput?
+        ) async throws(Database.Error) -> QueryValue.QueryOutput?
 
         /// Returns a cursor for streaming results from a statement.
         ///
@@ -142,7 +142,7 @@ extension Database.Connection {
         ///   connections, the cursor holds onto a connection until consumed.
         func fetchCursor<QueryValue: QueryRepresentable>(
             _ statement: some Statement<QueryValue>
-        ) async throws -> Database.Cursor<QueryValue.QueryOutput>
+        ) async throws(Database.Error) -> Database.Cursor<QueryValue.QueryOutput>
 
         /// Executes a block within a nested transaction.
         ///
@@ -150,8 +150,11 @@ extension Database.Connection {
         /// TransactionConnection overrides this to provide proper nesting.
         func withNestedTransaction<T: Sendable>(
             isolation: TransactionIsolationLevel?,
-            _ block: @Sendable (any Database.Connection.`Protocol`) async throws -> T
-        ) async throws -> T
+            _ block:
+                // swiftlint:disable:next no_any_protocol_existential
+                @Sendable (any Database.Connection.`Protocol`) async throws(Database.Error) ->
+                T
+        ) async throws(Database.Error) -> T
 
         /// Executes a block within a savepoint.
         ///
@@ -159,8 +162,11 @@ extension Database.Connection {
         /// TransactionConnection overrides this to track nesting depth.
         func withSavepoint<T: Sendable>(
             _ name: String?,
-            _ block: @Sendable (any Database.Connection.`Protocol`) async throws -> T
-        ) async throws -> T
+            _ block:
+                // swiftlint:disable:next no_any_protocol_existential
+                @Sendable (any Database.Connection.`Protocol`) async throws(Database.Error) ->
+                T
+        ) async throws(Database.Error) -> T
     }
 }
 
@@ -170,12 +176,14 @@ extension Database.Connection.`Protocol` {
     /// Default implementation starts a new transaction.
     public func withNestedTransaction<T: Sendable>(
         isolation: TransactionIsolationLevel?,
-        _ block: @Sendable (any Database.Connection.`Protocol`) async throws -> T
-    ) async throws -> T {
+        // Deliberate: runtime connection substitution.
+        // swiftlint:disable:next no_any_protocol_existential
+        _ block: @Sendable (any Database.Connection.`Protocol`) async throws(Database.Error) -> T
+    ) async throws(Database.Error) -> T {
         // For non-transaction connections, start a new transaction
         let isolationLevel = isolation ?? .readCommitted
         try await execute("BEGIN ISOLATION LEVEL \(isolationLevel.rawValue)")
-        do {
+        do throws(Database.Error) {
             let result = try await block(self)
             try await execute("COMMIT")
             return result
@@ -188,12 +196,14 @@ extension Database.Connection.`Protocol` {
     /// Default implementation uses raw SQL savepoint commands.
     public func withSavepoint<T: Sendable>(
         _ name: String?,
-        _ block: @Sendable (any Database.Connection.`Protocol`) async throws -> T
-    ) async throws -> T {
+        // Deliberate: runtime connection substitution.
+        // swiftlint:disable:next no_any_protocol_existential
+        _ block: @Sendable (any Database.Connection.`Protocol`) async throws(Database.Error) -> T
+    ) async throws(Database.Error) -> T {
         let savepointName = name ?? "sp_\(UUID().uuidString.prefix(8))"
 
         try await execute("SAVEPOINT \(savepointName)")
-        do {
+        do throws(Database.Error) {
             let result = try await block(self)
             try await execute("RELEASE SAVEPOINT \(savepointName)")
             return result

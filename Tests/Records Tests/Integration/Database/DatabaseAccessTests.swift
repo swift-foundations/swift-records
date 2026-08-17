@@ -30,7 +30,7 @@ struct Test {
 
             var collected: [Int] = []
             for await result in group {
-                if let result = result {
+                if let result {
                     collected.append(result)
                 }
             }
