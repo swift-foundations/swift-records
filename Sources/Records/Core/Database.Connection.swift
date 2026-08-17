@@ -140,7 +140,7 @@ extension Database {
                 }
             }
 
-            return Database.Cursor<QueryValue.QueryOutput> {
+            return Database.Cursor<QueryValue.QueryOutput> { () async throws(Database.Error) in
                 try await iteratorManager.next()
             }
         }

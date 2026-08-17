@@ -16,7 +16,7 @@ struct Test {
     @Test
     func `UPDATE with WHERE and RETURNING`() async throws {
         // Insert test data
-        let inserted = try await db.write { db in
+        let inserted = try await db.write { db async throws(Database.Error) in
             try await Reminder.insert {
                 Reminder.Draft(
                     isCompleted: false,
@@ -32,7 +32,7 @@ struct Test {
         let id = try #require(inserted.first?.id)
 
         // Update
-        let results = try await db.write { db in
+        let results = try await db.write { db async throws(Database.Error) in
             try await Reminder
                 .where { $0.id == id }
                 .update { $0.isCompleted = true }
@@ -45,7 +45,7 @@ struct Test {
         #expect(results.first?.isCompleted == true)
 
         // Cleanup
-        try await db.write { db in
+        try await db.write { db async throws(Database.Error) in
             try await Reminder.find(id).delete().execute(db)
         }
     }
@@ -53,7 +53,7 @@ struct Test {
     @Test
     func `UPDATE with NULL values`() async throws {
         // Insert test data with assignedUserID
-        let inserted = try await db.write { db in
+        let inserted = try await db.write { db async throws(Database.Error) in
             try await Reminder.insert {
                 Reminder.Draft(
                     assignedUserID: 1,
@@ -69,7 +69,7 @@ struct Test {
         #expect(inserted.first?.assignedUserID == 1)
 
         // Update to set assignedUserID to nil
-        try await db.write { db in
+        try await db.write { db async throws(Database.Error) in
             try await Reminder
                 .where { $0.id == id }
                 .update { $0.assignedUserID = nil }
@@ -77,7 +77,7 @@ struct Test {
         }
 
         // Verify with SELECT
-        let reminder = try await db.read { db in
+        let reminder = try await db.read { db async throws(Database.Error) in
             try await Reminder.where { $0.id == id }.fetchOne(db)
         }
 
@@ -85,7 +85,7 @@ struct Test {
         #expect(reminder?.assignedUserID == nil)
 
         // Cleanup
-        try await db.write { db in
+        try await db.write { db async throws(Database.Error) in
             try await Reminder.find(id).delete().execute(db)
         }
     }
@@ -93,7 +93,7 @@ struct Test {
     @Test
     func `UPDATE multiple columns`() async throws {
         // Insert test data
-        let inserted = try await db.write { db in
+        let inserted = try await db.write { db async throws(Database.Error) in
             try await Reminder.insert {
                 Reminder.Draft(
                     isCompleted: false,
@@ -109,7 +109,7 @@ struct Test {
         let id = try #require(inserted.first?.id)
 
         // Update multiple columns
-        let results = try await db.write { db in
+        let results = try await db.write { db async throws(Database.Error) in
             try await Reminder
                 .where { $0.id == id }
                 .update { reminder in
@@ -125,7 +125,7 @@ struct Test {
         #expect(results.first?.notes == "Completed")
 
         // Cleanup
-        try await db.write { db in
+        try await db.write { db async throws(Database.Error) in
             try await Reminder.find(id).delete().execute(db)
         }
     }
@@ -133,7 +133,7 @@ struct Test {
     @Test
     func `UPDATE with no matches returns empty`() async throws {
         // Try to update non-existent record
-        let results = try await db.write { db in
+        let results = try await db.write { db async throws(Database.Error) in
             try await Reminder
                 .where { $0.id == 999999 }
                 .update { $0.isCompleted = true }
@@ -147,7 +147,7 @@ struct Test {
     @Test
     func `UPDATE with WHERE on foreign key`() async throws {
         // Insert test list
-        let insertedList = try await db.write { db in
+        let insertedList = try await db.write { db async throws(Database.Error) in
             try await RemindersList.insert {
                 RemindersList(id: -1, title: "FK update test list")
             }
@@ -158,7 +158,7 @@ struct Test {
         let listId = try #require(insertedList.first?.id)
 
         // Insert reminders in this list
-        let inserted = try await db.write { db in
+        let inserted = try await db.write { db async throws(Database.Error) in
             try await Reminder.insert {
                 Reminder.Draft(isFlagged: false, remindersListID: listId, title: "FK test 1")
                 Reminder.Draft(isFlagged: false, remindersListID: listId, title: "FK test 2")
@@ -171,7 +171,7 @@ struct Test {
         #expect(inserted.count == 3)
 
         // Update reminders in this list
-        let results = try await db.write { db in
+        let results = try await db.write { db async throws(Database.Error) in
             try await Reminder
                 .where { $0.remindersListID == listId }
                 .update { $0.isFlagged = true }
@@ -183,7 +183,7 @@ struct Test {
         #expect(results.allSatisfy { $0.isFlagged == true })
 
         // Cleanup (list deletion cascades to reminders)
-        try await db.write { db in
+        try await db.write { db async throws(Database.Error) in
             try await RemindersList.find(listId).delete().execute(db)
         }
     }
@@ -192,7 +192,7 @@ struct Test {
     func `UPDATE all rows`() async throws {
         // Insert test reminders with unique marker
         let marker = "UpdateAll-\(UUID().uuidString.prefix(8))"
-        let inserted = try await db.write { db in
+        let inserted = try await db.write { db async throws(Database.Error) in
             try await Reminder.insert {
                 Reminder.Draft(isFlagged: true, remindersListID: 1, title: "\(marker)-1")
                 Reminder.Draft(isFlagged: true, remindersListID: 1, title: "\(marker)-2")
@@ -208,7 +208,7 @@ struct Test {
         #expect(inserted.count == 6)
 
         // Update all test reminders
-        let results = try await db.write { db in
+        let results = try await db.write { db async throws(Database.Error) in
             try await Reminder
                 .where { $0.title.ilike("\(marker)-%") }
                 .update { $0.isFlagged = false }
@@ -220,7 +220,7 @@ struct Test {
         #expect(results.allSatisfy { $0.isFlagged == false })
 
         // Cleanup
-        try await db.write { db in
+        try await db.write { db async throws(Database.Error) in
             try await Reminder.where { $0.title.ilike("\(marker)-%") }.delete().execute(db)
         }
     }
@@ -228,7 +228,7 @@ struct Test {
     @Test
     func `UPDATE with boolean field`() async throws {
         // Insert test data
-        let inserted = try await db.write { db in
+        let inserted = try await db.write { db async throws(Database.Error) in
             try await Reminder.insert {
                 Reminder.Draft(
                     isCompleted: false,
@@ -244,7 +244,7 @@ struct Test {
         #expect(inserted.first?.isCompleted == false)
 
         // Update
-        let updated = try await db.write { db in
+        let updated = try await db.write { db async throws(Database.Error) in
             try await Reminder
                 .where { $0.id == id }
                 .update { $0.isCompleted = true }
@@ -255,7 +255,7 @@ struct Test {
         #expect(updated?.isCompleted == true)
 
         // Cleanup
-        try await db.write { db in
+        try await db.write { db async throws(Database.Error) in
             try await Reminder.find(id).delete().execute(db)
         }
     }
@@ -263,7 +263,7 @@ struct Test {
     @Test
     func `UPDATE with text concatenation`() async throws {
         // Insert test data
-        let inserted = try await db.write { db in
+        let inserted = try await db.write { db async throws(Database.Error) in
             try await Reminder.insert {
                 Reminder.Draft(
                     notes: "Original text",
@@ -278,7 +278,7 @@ struct Test {
         let id = try #require(inserted.first?.id)
 
         // Update with text concatenation (SQL + operator translates to ||)
-        try await db.write { db in
+        try await db.write { db async throws(Database.Error) in
             try await Reminder
                 .where { $0.id == id }
                 .update { $0.notes = SQLQueryExpression($0.notes) + " - Updated" }
@@ -286,7 +286,7 @@ struct Test {
         }
 
         // Verify with SELECT
-        let reminder = try await db.read { db in
+        let reminder = try await db.read { db async throws(Database.Error) in
             try await Reminder.where { $0.id == id }.fetchOne(db)
         }
 
@@ -294,7 +294,7 @@ struct Test {
         #expect(reminder?.notes == "Original text - Updated")
 
         // Cleanup
-        try await db.write { db in
+        try await db.write { db async throws(Database.Error) in
             try await Reminder
                 .find(id)
                 .delete()

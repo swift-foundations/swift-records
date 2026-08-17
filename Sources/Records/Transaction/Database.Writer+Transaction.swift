@@ -24,7 +24,7 @@ extension Database.Writer {
         // swiftlint:disable:next no_any_protocol_existential
         _ block: @Sendable (any Database.Connection.`Protocol`) async throws(Database.Error) -> T
     ) async throws(Database.Error) -> T {
-        try await write { db in
+        try await write { db async throws(Database.Error) -> T in
             try await db.execute("BEGIN ISOLATION LEVEL \(isolation.rawValue)")
             do throws(Database.Error) {
                 let result = try await block(Database.TransactionConnection(db))
@@ -60,7 +60,7 @@ extension Database.Writer {
         // swiftlint:disable:next no_any_protocol_existential
         _ block: @Sendable (any Database.Connection.`Protocol`) async throws(Database.Error) -> T
     ) async throws(Database.Error) -> T {
-        try await write { db in
+        try await write { db async throws(Database.Error) -> T in
             try await db.execute("BEGIN")
             do throws(Database.Error) {
                 let result = try await block(db)
@@ -165,7 +165,7 @@ extension Database.Writer {
             name ?? "sp_\(UUID().uuidString.prefix(8))"
         )
 
-        return try await write { db in
+        return try await write { db async throws(Database.Error) -> T in
             try await db.execute("SAVEPOINT \(savepointName)")
             do throws(Database.Error) {
                 let result = try await block(db)

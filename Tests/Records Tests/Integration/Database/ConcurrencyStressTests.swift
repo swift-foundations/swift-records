@@ -23,11 +23,11 @@ struct Test {
         let count = 100
 
         // Delete existing test data
-        try await db.write { db in
+        try await db.write { db async throws(Database.Error) in
             try await Reminder.where { $0.title.hasPrefix("Concurrent") }.delete().execute(db)
         }
 
-        let countBefore = try await db.read { db in
+        let countBefore = try await db.read { db async throws(Database.Error) in
             try await Reminder.fetchCount(db)
         }
 
@@ -35,7 +35,7 @@ struct Test {
         try await withThrowingTaskGroup(of: Void.self) { group in
             for i in 1...count {
                 group.addTask {
-                    try await db.write { db in
+                    try await db.write { db async throws(Database.Error) in
                         try await Reminder.insert {
                             Reminder.Draft(
                                 remindersListID: 1,
@@ -51,14 +51,14 @@ struct Test {
         }
 
         // Verify all inserted - with proper connection pool, 100% should succeed
-        let countAfter = try await db.read { db in
+        let countAfter = try await db.read { db async throws(Database.Error) in
             try await Reminder.fetchCount(db)
         }
 
         #expect(countAfter == countBefore + count)
 
         // Cleanup
-        try await db.write { db in
+        try await db.write { db async throws(Database.Error) in
             try await Reminder.where { $0.title.hasPrefix("Concurrent") }.delete().execute(db)
         }
     }
@@ -68,11 +68,11 @@ struct Test {
         let count = 500
 
         // Delete existing test data
-        try await db.write { db in
+        try await db.write { db async throws(Database.Error) in
             try await Reminder.where { $0.title.hasPrefix("Stress") }.delete().execute(db)
         }
 
-        let countBefore = try await db.read { db in
+        let countBefore = try await db.read { db async throws(Database.Error) in
             try await Reminder.fetchCount(db)
         }
 
@@ -87,7 +87,7 @@ struct Test {
             for i in 1...count {
                 group.addTask {
                     do {
-                        try await db.write { db in
+                        try await db.write { db async throws(Database.Error) in
                             try await Reminder.insert {
                                 Reminder.Draft(
                                     remindersListID: (i % 2) + 1,  // Only IDs 1 and 2 exist
@@ -136,7 +136,7 @@ struct Test {
         }
 
         // Verify actual inserted count
-        let countAfter = try await db.read { db in
+        let countAfter = try await db.read { db async throws(Database.Error) in
             try await Reminder.fetchCount(db)
         }
         let actualInserted = countAfter - countBefore
@@ -153,7 +153,7 @@ struct Test {
         )
 
         // Cleanup
-        try await db.write { db in
+        try await db.write { db async throws(Database.Error) in
             try await Reminder.where { $0.title.hasPrefix("Stress") }.delete().execute(db)
         }
     }
@@ -165,7 +165,7 @@ struct Test {
         let iterations = 100
 
         // Setup initial data
-        try await db.write { db in
+        try await db.write { db async throws(Database.Error) in
             try await Reminder.where { $0.title.hasPrefix("ReadWrite") }.delete().execute(db)
             try await Reminder.insert {
                 Reminder.Draft(remindersListID: 1, title: "ReadWrite Initial")
@@ -178,7 +178,7 @@ struct Test {
             // Spawn readers
             for _ in 1...iterations {
                 group.addTask {
-                    try? await db.read { db in
+                    try? await db.read { db async throws(Database.Error) in
                         try await Reminder.where { $0.title.hasPrefix("ReadWrite") }.fetchCount(db)
                     }
                 }
@@ -187,7 +187,7 @@ struct Test {
             // Spawn writers
             for i in 1...iterations {
                 group.addTask {
-                    try? await db.write { db in
+                    try? await db.write { db async throws(Database.Error) in
                         try await Reminder.insert {
                             Reminder.Draft(
                                 remindersListID: 1,
@@ -212,7 +212,7 @@ struct Test {
         #expect(results.count == iterations)
 
         // Cleanup
-        try await db.write { db in
+        try await db.write { db async throws(Database.Error) in
             try await Reminder.where { $0.title.hasPrefix("ReadWrite") }.delete().execute(db)
         }
     }
@@ -227,7 +227,7 @@ struct Test {
         try await withThrowingTaskGroup(of: Void.self) { group in
             for _ in 1...requests {
                 group.addTask {
-                    try await db.read { db in
+                    try await db.read { db async throws(Database.Error) in
                         // Hold connection briefly
                         try await Task.sleep(nanoseconds: 5_000_000)  // 5ms
                         _ = try await Reminder.select { $0.id }.limit(1).fetchAll(db)
@@ -248,7 +248,7 @@ struct Test {
     @Test
     func `Concurrent UPDATE operations on different records`() async throws {
         // Setup: Insert records to update
-        let inserted = try await db.write { db in
+        let inserted = try await db.write { db async throws(Database.Error) in
             try await Reminder.insert {
                 for i in 1...50 {
                     Reminder.Draft(
@@ -267,7 +267,7 @@ struct Test {
         try await withThrowingTaskGroup(of: Void.self) { group in
             for id in ids {
                 group.addTask {
-                    try await db.write { db in
+                    try await db.write { db async throws(Database.Error) in
                         try await Reminder.find(id)
                             .update { $0.title = "Updated \(id)" }
                             .execute(db)
@@ -279,7 +279,7 @@ struct Test {
         }
 
         // Verify all updates succeeded
-        let updated = try await db.read { db in
+        let updated = try await db.read { db async throws(Database.Error) in
             try await Reminder.find(ids).fetchAll(db)
         }
 
@@ -288,7 +288,7 @@ struct Test {
         }
 
         // Cleanup
-        try await db.write { db in
+        try await db.write { db async throws(Database.Error) in
             try await Reminder.find(ids).delete().execute(db)
         }
     }
@@ -296,7 +296,7 @@ struct Test {
     @Test
     func `Concurrent UPDATE operations on same record - last write wins`() async throws {
         // Setup: Insert one record
-        let inserted = try await db.write { db in
+        let inserted = try await db.write { db async throws(Database.Error) in
             try await Reminder.insert {
                 Reminder.Draft(
                     remindersListID: 1,
@@ -316,7 +316,7 @@ struct Test {
         await withTaskGroup(of: Void.self) { group in
             for i in 1...100 {
                 group.addTask {
-                    try? await db.write { db in
+                    try? await db.write { db async throws(Database.Error) in
                         try await Reminder.find(id)
                             .update { $0.notes = "Update \(i)" }
                             .execute(db)
@@ -326,7 +326,7 @@ struct Test {
         }
 
         // Verify record exists and has one of the updates
-        let final = try await db.read { db in
+        let final = try await db.read { db async throws(Database.Error) in
             try await Reminder.find(id).fetchOne(db)
         }
 
@@ -336,7 +336,7 @@ struct Test {
         }
 
         // Cleanup
-        try await db.write { db in
+        try await db.write { db async throws(Database.Error) in
             try await Reminder.find(id).delete().execute(db)
         }
     }
@@ -346,7 +346,7 @@ struct Test {
     @Test
     func `Concurrent DELETE operations`() async throws {
         // Setup: Insert records to delete
-        let inserted = try await db.write { db in
+        let inserted = try await db.write { db async throws(Database.Error) in
             try await Reminder.insert {
                 for i in 1...100 {
                     Reminder.Draft(
@@ -365,7 +365,7 @@ struct Test {
         try await withThrowingTaskGroup(of: Void.self) { group in
             for id in ids {
                 group.addTask {
-                    try await db.write { db in
+                    try await db.write { db async throws(Database.Error) in
                         try await Reminder.find(id).delete().execute(db)
                     }
                 }
@@ -375,7 +375,7 @@ struct Test {
         }
 
         // Verify all deleted successfully
-        let remaining = try await db.read { db in
+        let remaining = try await db.read { db async throws(Database.Error) in
             try await Reminder.find(ids).fetchAll(db)
         }
 
@@ -389,7 +389,7 @@ struct Test {
         let transactionCount = 50
 
         // Delete test data
-        try await db.write { db in
+        try await db.write { db async throws(Database.Error) in
             try await Reminder.where { $0.title.hasPrefix("Transaction") }.delete().execute(db)
         }
 
@@ -397,7 +397,7 @@ struct Test {
         try await withThrowingTaskGroup(of: Void.self) { group in
             for i in 1...transactionCount {
                 group.addTask {
-                    try await db.withTransaction { db in
+                    try await db.withTransaction { db async throws(Database.Error) in
                         // Each transaction inserts 2 records
                         try await Reminder.insert {
                             Reminder.Draft(
@@ -417,14 +417,14 @@ struct Test {
         }
 
         // Verify all committed successfully
-        let count = try await db.read { db in
+        let count = try await db.read { db async throws(Database.Error) in
             try await Reminder.where { $0.title.hasPrefix("Transaction") }.fetchCount(db)
         }
 
         #expect(count == transactionCount * 2)
 
         // Cleanup
-        try await db.write { db in
+        try await db.write { db async throws(Database.Error) in
             try await Reminder.where { $0.title.hasPrefix("Transaction") }.delete().execute(db)
         }
     }
@@ -438,7 +438,7 @@ struct Test {
         await withTaskGroup(of: Void.self) { group in
             for _ in 1...queryCount {
                 group.addTask {
-                    try? await db.read { db in
+                    try? await db.read { db async throws(Database.Error) in
                         // Complex query with joins, filters, ordering
                         _ =
                             try await Reminder
@@ -464,14 +464,14 @@ struct Test {
         let readerCount = 50
 
         // Delete test data
-        try await db.write { db in
+        try await db.write { db async throws(Database.Error) in
             try await Reminder.where { $0.title.hasPrefix("Batch") }.delete().execute(db)
         }
 
         await withTaskGroup(of: Void.self) { group in
             // Large batch insert
             group.addTask {
-                try? await db.write { db in
+                try? await db.write { db async throws(Database.Error) in
                     try await Reminder.insert {
                         for i in 1...batchSize {
                             Reminder.Draft(
@@ -486,7 +486,7 @@ struct Test {
             // Concurrent readers
             for _ in 1...readerCount {
                 group.addTask {
-                    try? await db.read { db in
+                    try? await db.read { db async throws(Database.Error) in
                         _ = try await Reminder.where { $0.title.hasPrefix("Batch") }.fetchCount(db)
                     }
                 }
@@ -494,14 +494,14 @@ struct Test {
         }
 
         // Verify batch completed
-        let count = try await db.read { db in
+        let count = try await db.read { db async throws(Database.Error) in
             try await Reminder.where { $0.title.hasPrefix("Batch") }.fetchCount(db)
         }
 
         #expect(count == batchSize)
 
         // Cleanup
-        try await db.write { db in
+        try await db.write { db async throws(Database.Error) in
             try await Reminder.where { $0.title.hasPrefix("Batch") }.delete().execute(db)
         }
     }
@@ -517,7 +517,7 @@ struct Test {
             for i in 1...totalOps {
                 group.addTask {
                     do {
-                        try await db.write { db in
+                        try await db.write { db async throws(Database.Error) in
                             try await Reminder.insert {
                                 Reminder.Draft(
                                     // Half will fail with invalid foreign key
@@ -545,7 +545,7 @@ struct Test {
         }
 
         // Cleanup
-        try await db.write { db in
+        try await db.write { db async throws(Database.Error) in
             try await Reminder.where { $0.title.hasPrefix("Failure Test") }.delete().execute(db)
         }
     }

@@ -643,7 +643,7 @@ extension Database.Writer {
         channel: ChannelName,
         payload: String
     ) async throws(Database.Error) {
-        try await write { db in
+        try await write { db async throws(Database.Error) in
             // Escape single quotes in payload for SQL safety
             let escapedPayload = payload.replacingOccurrences(of: "'", with: "''")
             try await db.execute("NOTIFY \(channel.quoted), '\(escapedPayload)'")
@@ -728,7 +728,7 @@ extension Database.Writer {
     /// - Parameter channel: The type-safe PostgreSQL channel name
     /// - Throws: Database errors if the NOTIFY command fails
     public func notify(channel: ChannelName) async throws(Database.Error) {
-        try await write { db in
+        try await write { db async throws(Database.Error) in
             try await db.execute("NOTIFY \(channel.quoted)")
         }
     }

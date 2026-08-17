@@ -143,10 +143,10 @@ extension SnapshotIntegrationTests.Execution.Select {
 
         @Test
         func `SELECT with LIMIT and OFFSET`() async throws {
-            let all = try await db.read { db in
+            let all = try await db.read { db async throws(Database.Error) in
                 try await Reminder.all.order(by: \.id).fetchAll(db)
             }
-            let offset = try await db.read { db in
+            let offset = try await db.read { db async throws(Database.Error) in
                 try await Reminder.all.order(by: \.id).limit(3, offset: 2).fetchAll(db)
             }
             #expect(offset.count == 3)
@@ -243,7 +243,7 @@ extension SnapshotIntegrationTests.Execution.Select {
 
         @Test
         func `SELECT with boolean operators`() async throws {
-            let results = try await db.read { db in
+            let results = try await db.read { db async throws(Database.Error) in
                 try await Reminder
                     .where { $0.isCompleted || $0.isFlagged }
                     .fetchAll(db)
@@ -254,7 +254,7 @@ extension SnapshotIntegrationTests.Execution.Select {
 
         @Test
         func `SELECT with enum comparison`() async throws {
-            let high = try await db.read { db in
+            let high = try await db.read { db async throws(Database.Error) in
                 try await Reminder.where { $0.priority == Priority.high }.fetchAll(db)
             }
             #expect(high.count == 1)
@@ -263,7 +263,7 @@ extension SnapshotIntegrationTests.Execution.Select {
 
         @Test
         func `SELECT with DISTINCT`() async throws {
-            let distinctLists = try await db.read { db in
+            let distinctLists = try await db.read { db async throws(Database.Error) in
                 try await Reminder.distinct().select { $0.remindersListID }.fetchAll(db)
             }
             #expect(distinctLists.count == 2)
@@ -271,7 +271,7 @@ extension SnapshotIntegrationTests.Execution.Select {
 
         @Test
         func `SELECT with computed column`() async throws {
-            let highPriority = try await db.read { db in
+            let highPriority = try await db.read { db async throws(Database.Error) in
                 try await Reminder.where { $0.isHighPriority }.fetchAll(db)
             }
             #expect(highPriority.count == 1)
@@ -301,7 +301,7 @@ extension SnapshotIntegrationTests.Execution.Select {
 
         @Test
         func `Fetch One returns nil when no match`() async throws {
-            let reminder = try await db.read { db in
+            let reminder = try await db.read { db async throws(Database.Error) in
                 try await Reminder.where { $0.id == 999 }.fetchOne(db)
             }
             #expect(reminder == nil)
@@ -309,7 +309,7 @@ extension SnapshotIntegrationTests.Execution.Select {
 
         @Test
         func `SELECT with find()`() async throws {
-            let reminder = try await db.read { db in
+            let reminder = try await db.read { db async throws(Database.Error) in
                 try await Reminder.find(1).fetchOne(db)
             }
             #expect(reminder != nil)
@@ -318,7 +318,7 @@ extension SnapshotIntegrationTests.Execution.Select {
 
         @Test
         func `SELECT with find() sequence`() async throws {
-            let reminders = try await db.read { db in
+            let reminders = try await db.read { db async throws(Database.Error) in
                 try await Reminder.find([1, 2, 3]).fetchAll(db)
             }
             #expect(reminders.count == 3)

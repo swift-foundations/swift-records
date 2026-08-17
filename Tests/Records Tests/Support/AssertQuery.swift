@@ -50,7 +50,7 @@ func assertQuery<each V: QueryRepresentable, S: Statement<(repeat each V)>>(
         query,
         execute: { statement in
             do {
-                return try await database.read { db in
+                return try await database.read { db async throws(Database.Error) in
                     return try await db.fetchAll(statement)
                 }
             } catch {

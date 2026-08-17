@@ -21,7 +21,7 @@ struct Test {
 
     @Test
     func `Search vector is automatically populated on insert`() async throws {
-        try await database.withRollback { db in
+        try await database.withRollback { db async throws(Database.Error) in
             // Insert new article
             let inserted = try await Article.insert {
                 Article.Draft(
@@ -63,7 +63,7 @@ struct Test {
 
     @Test
     func `Search vector updates on article update`() async throws {
-        try await database.withRollback { db in
+        try await database.withRollback { db async throws(Database.Error) in
             // Insert article
             let inserted = try await Article.insert {
                 Article.Draft(
@@ -117,7 +117,7 @@ struct Test {
     @Test
     func `Search for articles matching a single term`() async throws {
         do {
-            let articles = try await database.read { db in
+            let articles = try await database.read { db async throws(Database.Error) in
                 try await Article
                     .where { $0.match("PostgreSQL") }
                     .fetchAll(db)
@@ -134,7 +134,7 @@ struct Test {
     @Test
     func `Search for articles with multiple terms (AND)`() async throws {
         do {
-            let articles = try await database.read { db in
+            let articles = try await database.read { db async throws(Database.Error) in
                 try await Article
                     .where { $0.match("Swift & patterns") }
                     .fetchAll(db)
@@ -151,7 +151,7 @@ struct Test {
     @Test
     func `Search for articles with multiple terms (OR)`() async throws {
         do {
-            let articles = try await database.read { db in
+            let articles = try await database.read { db async throws(Database.Error) in
                 try await Article
                     .where { $0.match("PostgreSQL | Swift") }
                     .order(by: \.title)
@@ -175,7 +175,7 @@ struct Test {
             // Search for "Swift" - appears in 2 articles with different weights
             // "Swift Concurrency Guide" - "Swift" in title (weight A) and body (weight B)
             // "Server-Side Swift" - "Swift" in title (weight A) only
-            let results = try await database.read { db in
+            let results = try await database.read { db async throws(Database.Error) in
                 try await Article
                     .where { $0.match("Swift") }
                     .order { $0.rank(by: "Swift") }
@@ -200,7 +200,7 @@ struct Test {
     @Test
     func `Search articles by author using FTS`() async throws {
         do {
-            let articles = try await database.read { db in
+            let articles = try await database.read { db async throws(Database.Error) in
                 try await Article
                     .where { $0.match("Alice") }
                     .order(by: \.id)
@@ -218,7 +218,7 @@ struct Test {
     @Test
     func `Search with phrase query`() async throws {
         do {
-            let articles = try await database.read { db in
+            let articles = try await database.read { db async throws(Database.Error) in
                 try await Article
                     .where { $0.phraseMatch("web services") }
                     .fetchAll(db)
@@ -235,7 +235,7 @@ struct Test {
     @Test
     func `Search returns no results for non-matching term`() async throws {
         do {
-            let articles = try await database.read { db in
+            let articles = try await database.read { db async throws(Database.Error) in
                 try await Article
                     .where { $0.match("nonexistentterm12345") }
                     .fetchAll(db)
@@ -251,7 +251,7 @@ struct Test {
     @Test
     func `Plain text search (safer for user input)`() async throws {
         do {
-            let articles = try await database.read { db in
+            let articles = try await database.read { db async throws(Database.Error) in
                 try await Article
                     .where { $0.plainMatch("swift postgresql") }
                     .fetchAll(db)
@@ -269,7 +269,7 @@ struct Test {
     @Test
     func `Web search syntax`() async throws {
         do {
-            let articles = try await database.read { db in
+            let articles = try await database.read { db async throws(Database.Error) in
                 try await Article
                     .where { $0.webMatch("Swift OR PostgreSQL") }
                     .fetchAll(db)
@@ -293,7 +293,7 @@ struct Test {
         do {
             // Search for "Swift" with custom weights favoring title (A) heavily
             // Weights: [D, C, B, A] = [0.1, 0.2, 0.4, 1.0]
-            let results = try await database.read { db in
+            let results = try await database.read { db async throws(Database.Error) in
                 try await Article
                     .where { $0.match("Swift") }
                     .order { $0.rank(by: "Swift", weights: [0.1, 0.2, 0.4, 1.0]) }
@@ -320,7 +320,7 @@ struct Test {
     func `Coverage-based ranking for phrase searches`() async throws {
         do {
             // Use rank(byCoverage:) which considers proximity and coverage
-            let results = try await database.read { db in
+            let results = try await database.read { db async throws(Database.Error) in
                 try await Article
                     .where { $0.match("PostgreSQL") }
                     .order { $0.rank(byCoverage: "PostgreSQL") }
@@ -339,7 +339,7 @@ struct Test {
     func `Highlight search matches with ts headline`() async throws {
         do {
             // Search and highlight matches in results
-            let results = try await database.read { db in
+            let results = try await database.read { db async throws(Database.Error) in
                 try await Article
                     .where { $0.match("Swift") }
                     .select {
@@ -378,7 +378,7 @@ struct Test {
     func `Column-specific search with to Tsvector`() async throws {
         do {
             // Search only in title using ad-hoc tsvector conversion
-            let results = try await database.read { db in
+            let results = try await database.read { db async throws(Database.Error) in
                 try await Article
                     .where { $0.title.match("Swift") }
                     .fetchAll(db)
@@ -736,7 +736,7 @@ struct Test {
 
     @Test
     func `Empty query string returns no results`() async throws {
-        try await database.read { db in
+        try await database.read { db async throws(Database.Error) in
             let results =
                 try await Article
                 .where { $0.plainMatch("") }
@@ -747,7 +747,7 @@ struct Test {
 
     @Test
     func `Special characters in delimiters are escaped`() async throws {
-        try await database.read { db in
+        try await database.read { db async throws(Database.Error) in
             // Test with single quotes in delimiters
             let results =
                 try await Article
@@ -768,7 +768,7 @@ struct Test {
 
     @Test
     func `Commas in delimiters are stripped`() async throws {
-        try await database.read { db in
+        try await database.read { db async throws(Database.Error) in
             // Test with commas in delimiters - they must be removed because PostgreSQL
             // uses commas as option separators and doesn't support escaping them
             let results =
@@ -790,7 +790,7 @@ struct Test {
 
     @Test
     func `Unicode characters in search query`() async throws {
-        try await database.withRollback { db in
+        try await database.withRollback { db async throws(Database.Error) in
             // Insert article with unicode
             try await Article.insert {
                 Article.Draft(
@@ -829,7 +829,7 @@ struct Article: Codable, Equatable, Identifiable, FullTextSearchable {
 extension Database.TestDatabaseSetupMode {
     /// Articles schema with full-text search pre-configured
     static let withArticlesFTS = Database.TestDatabaseSetupMode { db in
-        try await db.write { conn in
+        try await db.write { conn async throws(Database.Error) in
             // Create articles table
             try await conn.execute(
                 """

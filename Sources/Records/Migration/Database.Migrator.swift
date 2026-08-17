@@ -178,7 +178,7 @@ extension Database {
             // swiftlint:disable:next no_any_protocol_existential
             _ writer: any Writer
         ) async throws(Database.Error) {
-            try await writer.write { db in
+            try await writer.write { db async throws(Database.Error) in
                 // Create migration tracking table if it doesn't exist
                 try await createMigrationTable(db)
 
@@ -226,7 +226,7 @@ extension Database {
             // swiftlint:disable:next no_any_protocol_existential
             _ writer: any Writer
         ) async throws(Database.Error) -> Bool {
-            try await writer.read { db in
+            try await writer.read { db async throws(Database.Error) -> Bool in
                 let appliedIdentifiers = try await fetchAppliedIdentifiers(db)
                 return migrations.allSatisfy { appliedIdentifiers.contains($0.identifier) }
             }

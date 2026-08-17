@@ -415,7 +415,7 @@ struct Test {
         }
 
         do {
-            try await database.withTransaction { db in
+            try await database.withTransaction { db async throws(Database.Error) in
                 try await db.notify(channel: channel, payload: payload)
                 if !shouldCommit {
                     throw Database.Error.queryFailed(underlying: CancellationError())
@@ -497,7 +497,7 @@ struct Test {
                 }
             }
 
-            try await database.write { db in
+            try await database.write { db async throws(Database.Error) in
                 try await db.notify(channel: channel, payload: change)
             }
 

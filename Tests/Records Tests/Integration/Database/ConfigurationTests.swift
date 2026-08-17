@@ -38,7 +38,7 @@ struct Test {
             let queue = await Database.singleConnection(configuration: config)
 
             // Test that we can perform operations
-            try await queue.write { db in
+            try await queue.write { db async throws(Database.Error) in
                 try await db.execute("SELECT 1")
             }
 
@@ -59,7 +59,7 @@ struct Test {
         )
 
         // Test that we can perform operations
-        try await pool.read { db in
+        try await pool.read { db async throws(Database.Error) in
             try await db.execute("SELECT 1")
         }
 

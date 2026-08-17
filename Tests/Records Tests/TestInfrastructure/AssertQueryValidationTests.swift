@@ -19,7 +19,7 @@ struct Test {
         await Records_Test_Support.assertQuery(
             Reminder.select { $0.title }.order(by: \.title).limit(3),
             execute: { statement in
-                try await db.read { db in
+                try await db.read { db async throws(Database.Error) in
                     try await db.fetchAll(statement)
                 }
             },

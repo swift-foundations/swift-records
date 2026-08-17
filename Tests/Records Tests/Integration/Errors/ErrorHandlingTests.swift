@@ -20,7 +20,7 @@ struct Test {
     @Test
     func `NOT NULL constraint violation`() async throws {
         await #expect(throws: (any Swift.Error).self) {
-            try await db.write { db in
+            try await db.write { db async throws(Database.Error) in
                 try await db.execute(
                     """
                     INSERT INTO "reminders" ("remindersListID", "title", "isCompleted")
@@ -34,7 +34,7 @@ struct Test {
     @Test
     func `Foreign key constraint violation`() async throws {
         await #expect(throws: (any Swift.Error).self) {
-            try await db.write { db in
+            try await db.write { db async throws(Database.Error) in
                 try await Reminder.insert {
                     Reminder.Draft(
                         remindersListID: 999999,  // Non-existent list
@@ -48,7 +48,7 @@ struct Test {
     @Test
     func `Unique constraint violation`() async throws {
         // Create temporary table with unique constraint
-        try await db.write { db in
+        try await db.write { db async throws(Database.Error) in
             try await db.execute(
                 """
                 CREATE TEMPORARY TABLE unique_test (
@@ -68,7 +68,7 @@ struct Test {
 
         // Try to insert duplicate - should fail
         await #expect(throws: (any Swift.Error).self) {
-            try await db.write { db in
+            try await db.write { db async throws(Database.Error) in
                 try await db.execute(
                     """
                     INSERT INTO unique_test (email) VALUES ('test@example.com')
@@ -78,7 +78,7 @@ struct Test {
         }
 
         // Cleanup
-        try await db.write { db in
+        try await db.write { db async throws(Database.Error) in
             try await db.execute("DROP TABLE IF EXISTS unique_test")
         }
     }
@@ -86,7 +86,7 @@ struct Test {
     @Test
     func `Check constraint violation`() async throws {
         // Create temporary table with check constraint
-        try await db.write { db in
+        try await db.write { db async throws(Database.Error) in
             try await db.execute(
                 """
                 CREATE TEMPORARY TABLE check_test (
@@ -99,7 +99,7 @@ struct Test {
 
         // Try to insert invalid age - should fail
         await #expect(throws: (any Swift.Error).self) {
-            try await db.write { db in
+            try await db.write { db async throws(Database.Error) in
                 try await db.execute(
                     """
                     INSERT INTO check_test (age) VALUES (-1)
@@ -109,7 +109,7 @@ struct Test {
         }
 
         await #expect(throws: (any Swift.Error).self) {
-            try await db.write { db in
+            try await db.write { db async throws(Database.Error) in
                 try await db.execute(
                     """
                     INSERT INTO check_test (age) VALUES (200)
@@ -119,7 +119,7 @@ struct Test {
         }
 
         // Cleanup
-        try await db.write { db in
+        try await db.write { db async throws(Database.Error) in
             try await db.execute("DROP TABLE IF EXISTS check_test")
         }
     }
@@ -129,7 +129,7 @@ struct Test {
     @Test
     func `Type mismatch - text as integer`() async throws {
         await #expect(throws: (any Swift.Error).self) {
-            try await db.write { db in
+            try await db.write { db async throws(Database.Error) in
                 try await db.execute(
                     """
                     INSERT INTO "reminders" ("remindersListID", "title", "isCompleted")
@@ -143,7 +143,7 @@ struct Test {
     @Test
     func `Type mismatch - invalid date format`() async throws {
         await #expect(throws: (any Swift.Error).self) {
-            try await db.write { db in
+            try await db.write { db async throws(Database.Error) in
                 try await db.execute(
                     """
                     INSERT INTO "reminders" ("remindersListID", "title", "isCompleted", "dueDate")
@@ -159,7 +159,7 @@ struct Test {
     @Test
     func `SQL syntax error`() async throws {
         await #expect(throws: (any Swift.Error).self) {
-            try await db.read { db in
+            try await db.read { db async throws(Database.Error) in
                 try await db.execute("INVALID SQL SYNTAX")
             }
         }
@@ -168,7 +168,7 @@ struct Test {
     @Test
     func `Non-existent table`() async throws {
         await #expect(throws: (any Swift.Error).self) {
-            try await db.read { db in
+            try await db.read { db async throws(Database.Error) in
                 try await db.execute("SELECT * FROM nonexistent_table")
             }
         }
@@ -177,7 +177,7 @@ struct Test {
     @Test
     func `Non-existent column`() async throws {
         await #expect(throws: (any Swift.Error).self) {
-            try await db.read { db in
+            try await db.read { db async throws(Database.Error) in
                 try await db.execute("SELECT nonexistent_column FROM reminders")
             }
         }
@@ -188,13 +188,13 @@ struct Test {
     @Test
     func `Transaction rollback on error`() async throws {
         // Count reminders before transaction
-        let countBefore = try await db.read { db in
+        let countBefore = try await db.read { db async throws(Database.Error) in
             try await Reminder.fetchAll(db).count
         }
 
         // Try transaction that should fail
         do {
-            try await db.withTransaction { db in
+            try await db.withTransaction { db async throws(Database.Error) in
                 // Insert a reminder (should succeed)
                 try await Reminder.insert {
                     Reminder.Draft(
@@ -216,7 +216,7 @@ struct Test {
         }
 
         // Count reminders after failed transaction
-        let countAfter = try await db.read { db in
+        let countAfter = try await db.read { db async throws(Database.Error) in
             try await Reminder.fetchAll(db).count
         }
 
@@ -227,11 +227,11 @@ struct Test {
     @Test
     func `Nested transaction error handling with savepoints`() async throws {
         // Note: PostgreSQL uses savepoints for nested transactions
-        let countBefore = try await db.read { db in
+        let countBefore = try await db.read { db async throws(Database.Error) in
             try await Reminder.fetchAll(db).count
         }
 
-        try await database.withTransaction { db in
+        try await database.withTransaction { db async throws(Database.Error) in
             // Outer transaction - insert should succeed
             try await Reminder.insert {
                 Reminder.Draft(
@@ -268,7 +268,7 @@ struct Test {
                 .execute(db)
         }
 
-        let countAfter = try await db.read { db in
+        let countAfter = try await db.read { db async throws(Database.Error) in
             try await Reminder.fetchAll(db).count
         }
 
@@ -288,7 +288,7 @@ struct Test {
     @Test
     func `NULL value in non-nullable column decoded`() async throws {
         // Insert a reminder with required field
-        let inserted = try await db.write { db in
+        let inserted = try await db.write { db async throws(Database.Error) in
             try await Reminder.insert {
                 Reminder.Draft(
                     remindersListID: 1,
@@ -306,7 +306,7 @@ struct Test {
 
         // Try to manually set title to NULL (bypassing type safety)
         await #expect(throws: (any Swift.Error).self) {
-            try await db.write { db in
+            try await db.write { db async throws(Database.Error) in
                 try await db.execute(
                     """
                     UPDATE "reminders" SET "title" = NULL WHERE "id" = \(insertedId)
@@ -316,7 +316,7 @@ struct Test {
         }
 
         // Cleanup
-        try await db.write { db in
+        try await db.write { db async throws(Database.Error) in
             try await Reminder.find(insertedId).delete().execute(db)
         }
     }
@@ -326,7 +326,7 @@ struct Test {
     @Test
     func `NOT NULL constraint error is thrown`() async throws {
         do {
-            try await db.write { db in
+            try await db.write { db async throws(Database.Error) in
                 try await db.execute(
                     """
                     INSERT INTO "reminders" ("remindersListID", "title", "isCompleted")
@@ -346,7 +346,7 @@ struct Test {
     @Test
     func `Foreign key constraint error is thrown`() async throws {
         do {
-            try await db.write { db in
+            try await db.write { db async throws(Database.Error) in
                 try await Reminder.insert {
                     Reminder.Draft(
                         remindersListID: 999999,
@@ -368,7 +368,7 @@ struct Test {
     @Test
     func `Empty string vs NULL`() async throws {
         // Insert with empty string
-        let inserted1 = try await db.write { db in
+        let inserted1 = try await db.write { db async throws(Database.Error) in
             try await Reminder.insert {
                 Reminder.Draft(
                     notes: "",
@@ -381,7 +381,7 @@ struct Test {
         }
 
         // Insert with NULL (omit notes field for nil)
-        let inserted2 = try await db.write { db in
+        let inserted2 = try await db.write { db async throws(Database.Error) in
             try await Reminder.insert {
                 Reminder.Draft(
                     remindersListID: 1,
@@ -398,11 +398,11 @@ struct Test {
         }
 
         // Fetch and verify
-        let reminder1 = try await db.read { db in
+        let reminder1 = try await db.read { db async throws(Database.Error) in
             try await Reminder.find(insertedId1).fetchOne(db)
         }
 
-        let reminder2 = try await db.read { db in
+        let reminder2 = try await db.read { db async throws(Database.Error) in
             try await Reminder.find(insertedId2).fetchOne(db)
         }
 
@@ -410,7 +410,7 @@ struct Test {
         #expect(reminder2?.notes == nil || reminder2?.notes?.isEmpty == true)
 
         // Cleanup
-        try await db.write { db in
+        try await db.write { db async throws(Database.Error) in
             try await Reminder.find([insertedId1, insertedId2]).delete().execute(db)
         }
     }
@@ -418,7 +418,7 @@ struct Test {
     @Test
     func `Division by zero`() async throws {
         await #expect(throws: (any Swift.Error).self) {
-            try await db.read { db in
+            try await db.read { db async throws(Database.Error) in
                 try await db.execute("SELECT 1 / 0")
             }
         }
@@ -429,7 +429,7 @@ struct Test {
         // Create a very long string (1MB)
         let longText = String(repeating: "a", count: 1_000_000)
 
-        let inserted = try await db.write { db in
+        let inserted = try await db.write { db async throws(Database.Error) in
             try await Reminder.insert {
                 Reminder.Draft(
                     notes: longText,
@@ -447,7 +447,7 @@ struct Test {
         }
 
         // Verify it was stored
-        let reminder = try await db.read { db in
+        let reminder = try await db.read { db async throws(Database.Error) in
             try await Reminder.find(insertedId).fetchOne(db)
         }
 
@@ -458,7 +458,7 @@ struct Test {
         }
 
         // Cleanup
-        try await db.write { db in
+        try await db.write { db async throws(Database.Error) in
             try await Reminder.find(insertedId).delete().execute(db)
         }
     }
@@ -469,7 +469,7 @@ struct Test {
     func `Query timeout`() async throws {
         // Would require setting up a very slow query and timeout configuration
         // await #expect(throws: (any Swift.Error).self) {
-        //     try await db.read { db in
+        //     try await db.read { (db) async throws(Database.Error) in
         //         try await db.execute("SELECT pg_sleep(100)")
         //     }
         // }
@@ -479,7 +479,7 @@ struct Test {
     func `Cancelled operation`() async throws {
         // Would require setting up a cancellable task
         // let task = Task {
-        //     try await db.read { db in
+        //     try await db.read { (db) async throws(Database.Error) in
         //         try await db.execute("SELECT pg_sleep(10)")
         //     }
         // }

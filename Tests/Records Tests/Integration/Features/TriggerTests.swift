@@ -19,7 +19,7 @@ struct Test {
     // MARK: - Setup
 
     func setup() async throws {
-        try await db.write { db in
+        try await db.write { db async throws(Database.Error) in
             // Create test tables
             try await db.execute(
                 """
@@ -46,7 +46,7 @@ struct Test {
     }
 
     func cleanup() async throws {
-        try await db.write { db in
+        try await db.write { db async throws(Database.Error) in
             try await db.execute("DROP TABLE IF EXISTS \"itemLogs\" CASCADE")
             try await db.execute("DROP TABLE IF EXISTS \"items\" CASCADE")
         }
@@ -60,7 +60,7 @@ struct Test {
         defer { Task { try? await cleanup() } }
 
         // Create a trigger that sets position on insert
-        try await db.write { db in
+        try await db.write { db async throws(Database.Error) in
             // Use createTrigger.Function helper for PostgreSQL-specific function
             try await db.createTriggerFunction(
                 "set_default_position",
@@ -85,7 +85,7 @@ struct Test {
 
         // Insert items without setting position
         for name in ["First", "Second", "Third"] {
-            try await db.write { db in
+            try await db.write { db async throws(Database.Error) in
                 try await Item.insert {
                     Item.Draft(name: name)
                 }.execute(db)
@@ -93,7 +93,7 @@ struct Test {
         }
 
         // Check that positions were set automatically
-        let items = try await db.read { db in
+        let items = try await db.read { db async throws(Database.Error) in
             try await Item.all
                 .order(by: \.position)
                 .fetchAll(db)
@@ -111,7 +111,7 @@ struct Test {
     //        defer { Task { try? await cleanup() } }
     //
     //        // Create trigger using swift-structured-queries syntax
-    //        try await db.write { db in
+    //        try await db.write { (db) async throws(Database.Error) in
     //            // This trigger increments updateCount on each update
     //            try await db.execute(
     //                Item.createTemporaryTrigger(
@@ -127,7 +127,7 @@ struct Test {
     //        }
     //
     //        // Insert an item
-    //        let itemId = try await db.write { db in
+    //        let itemId = try await db.write { (db) async throws(Database.Error) in
     //            // Use the proper Insert API with returning
     //            let result = try await Item.insert {
     //                Item.Draft(name: "Test Item")
@@ -139,7 +139,7 @@ struct Test {
     //
     //        // Update it multiple times
     //        for i in 1...3 {
-    //            try await db.write { db in
+    //            try await db.write { (db) async throws(Database.Error) in
     //                try await Item
     //                    .where { $0.id == itemId }
     //                    .update { $0.name = "Updated \(i)" }
@@ -148,7 +148,7 @@ struct Test {
     //        }
     //
     //        // Check the update count
-    //        let item = try await db.read { db in
+    //        let item = try await db.read { (db) async throws(Database.Error) in
     //            try await Item
     //                .where { $0.id == itemId }
     //                .fetchOne(db)
@@ -163,7 +163,7 @@ struct Test {
     //        defer { Task { try? await cleanup() } }
     //
     //        // Create a trigger that logs deletions
-    //        try await db.write { db in
+    //        try await db.write { (db) async throws(Database.Error) in
     //            try await db.execute(
     //                Item.createTemporaryTrigger(
     //                    after: .delete { old in
@@ -177,7 +177,7 @@ struct Test {
     //        }
     //
     //        // Insert some items
-    //        let itemIds = try await db.write { db in
+    //        let itemIds = try await db.write { (db) async throws(Database.Error) in
     //            // Insert multiple items and collect their IDs
     //            let results = try await Item.insert {
     //                [
@@ -192,7 +192,7 @@ struct Test {
     //        }
     //
     //        // Delete one item
-    //        try await db.write { db in
+    //        try await db.write { (db) async throws(Database.Error) in
     //            try await Item
     //                .where { $0.id == itemIds[0] }
     //                .delete()
@@ -200,7 +200,7 @@ struct Test {
     //        }
     //
     //        // Check the log
-    //        let logs = try await db.read { db in
+    //        let logs = try await db.read { (db) async throws(Database.Error) in
     //            try await ItemLog.all.fetchAll(db)
     //        }
     //

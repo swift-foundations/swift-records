@@ -46,7 +46,7 @@ struct Test {
 
     init() async throws {
         // Create test tables
-        try await db.write { db in
+        try await db.write { db async throws(Database.Error) in
             try await db.execute(
                 """
                     CREATE TABLE IF NOT EXISTS test_accounts (
@@ -75,13 +75,13 @@ struct Test {
     @Test
     func `Basic transaction commit`() async throws {
         // Clear existing data
-        try await db.write { db in
+        try await db.write { db async throws(Database.Error) in
             try await db.execute("DELETE FROM test_transactions")
             try await db.execute("DELETE FROM test_accounts")
         }
 
         // Test transaction commit
-        let accountId = try await db.withTransaction { db in
+        let accountId = try await db.withTransaction { db async throws(Database.Error) in
             let account = Account(name: "Test Account", balance: 1000)
             let result = try await Account.insert {
                 ($0.name, $0.balance)
@@ -96,7 +96,7 @@ struct Test {
         }
 
         // Verify data was committed
-        let count = try await db.read { db in
+        let count = try await db.read { db async throws(Database.Error) in
             try await Account.where { $0.id == accountId }.asSelect().fetchCount(db)
         }
         #expect(count == 1)
@@ -105,13 +105,13 @@ struct Test {
     @Test
     func `Basic transaction rollback`() async throws {
         // Clear existing data
-        try await db.write { db in
+        try await db.write { db async throws(Database.Error) in
             try await db.execute("DELETE FROM test_accounts")
         }
 
         // Test transaction rollback
         do {
-            try await db.withTransaction { db in
+            try await db.withTransaction { db async throws(Database.Error) in
                 _ = try await Account.insert {
                     ($0.name, $0.balance)
                 } values: {
@@ -128,7 +128,7 @@ struct Test {
         }
 
         // Verify data was not committed
-        let count = try await db.read { db in
+        let count = try await db.read { db async throws(Database.Error) in
             try await Account.fetchCount(db)
         }
         #expect(count == 0)
@@ -139,11 +139,11 @@ struct Test {
     @Test
     func `Savepoint with auto-generated name`() async throws {
         // Clear existing data
-        try await db.write { db in
+        try await db.write { db async throws(Database.Error) in
             try await db.execute("DELETE FROM test_accounts")
         }
 
-        try await db.withTransaction { db in
+        try await db.withTransaction { db async throws(Database.Error) in
             // Insert first account
             let account1 = try await Account.insert {
                 ($0.name, $0.balance)
@@ -155,7 +155,7 @@ struct Test {
 
             // Try savepoint that fails
             do {
-                try await db.withSavepoint(nil) { db in
+                try await db.withSavepoint(nil) { db async throws(Database.Error) in
                     _ = try await Account.insert {
                         ($0.name, $0.balance)
                     } values: {
@@ -182,7 +182,7 @@ struct Test {
         }
 
         // Verify only accounts 1 and 3 were committed
-        let accounts = try await db.read { db in
+        let accounts = try await db.read { db async throws(Database.Error) in
             try await Account.order { $0.id }.fetchAll(db)
         }
         #expect(accounts.count == 2)
@@ -193,11 +193,11 @@ struct Test {
     @Test
     func `Named savepoint`() async throws {
         // Clear existing data
-        try await db.write { db in
+        try await db.write { db async throws(Database.Error) in
             try await db.execute("DELETE FROM test_accounts")
         }
 
-        try await db.withTransaction { db in
+        try await db.withTransaction { db async throws(Database.Error) in
             _ = try await Account.insert {
                 ($0.name, $0.balance)
             } values: {
@@ -206,7 +206,7 @@ struct Test {
             .execute(db)
 
             // Named savepoint
-            try await db.withSavepoint("test_point") { db in
+            try await db.withSavepoint("test_point") { db async throws(Database.Error) in
                 _ = try await Account.insert {
                     ($0.name, $0.balance)
                 } values: {
@@ -216,7 +216,7 @@ struct Test {
             }
         }
 
-        let count = try await db.read { db in
+        let count = try await db.read { db async throws(Database.Error) in
             try await Account.fetchCount(db)
         }
         #expect(count == 2)
@@ -227,12 +227,12 @@ struct Test {
     @Test
     func `Nested transactions with savepoints`() async throws {
         // Clear existing data - delete in correct order due to foreign key constraints
-        try await db.write { db in
+        try await db.write { db async throws(Database.Error) in
             try await db.execute("DELETE FROM test_transactions")
             try await db.execute("DELETE FROM test_accounts")
         }
 
-        try await db.withTransaction { db in
+        try await db.withTransaction { db async throws(Database.Error) in
             // Level 1: Main transaction
             let account = try await Account.insert {
                 ($0.name, $0.balance)
@@ -246,7 +246,7 @@ struct Test {
             #expect(account.id > 0)
 
             // Level 2: First nested transaction
-            try await db.withNestedTransaction(isolation: nil) { db in
+            try await db.withNestedTransaction(isolation: nil) { db async throws(Database.Error) in
                 _ = try await Transaction.insert {
                     ($0.accountId, $0.amount, $0.description)
                 } values: {
@@ -255,7 +255,8 @@ struct Test {
                 .execute(db)
 
                 // Level 3: Deeply nested transaction
-                try await db.withNestedTransaction(isolation: nil) { db in
+                try await db.withNestedTransaction(isolation: nil) {
+                    db async throws(Database.Error) in
                     _ = try await Transaction.insert {
                         ($0.accountId, $0.amount, $0.description)
                     } values: {
@@ -267,7 +268,8 @@ struct Test {
 
             // Level 2: Second nested transaction that fails
             do {
-                try await db.withNestedTransaction(isolation: nil) { db in
+                try await db.withNestedTransaction(isolation: nil) {
+                    db async throws(Database.Error) in
                     _ = try await Transaction.insert {
                         ($0.accountId, $0.amount, $0.description)
                     } values: {
@@ -282,7 +284,7 @@ struct Test {
             }
 
             // Level 2: Third nested transaction succeeds
-            try await db.withNestedTransaction(isolation: nil) { db in
+            try await db.withNestedTransaction(isolation: nil) { db async throws(Database.Error) in
                 _ = try await Transaction.insert {
                     ($0.accountId, $0.amount, $0.description)
                 } values: {
@@ -293,7 +295,7 @@ struct Test {
         }
 
         // Verify results
-        let transactions = try await db.read { db in
+        let transactions = try await db.read { db async throws(Database.Error) in
             try await Transaction.order { $0.id }.fetchAll(db)
         }
 
@@ -306,11 +308,12 @@ struct Test {
     @Test
     func `Nested transaction isolation`() async throws {
         // Clear existing data
-        try await db.write { db in
+        try await db.write { db async throws(Database.Error) in
             try await db.execute("DELETE FROM test_accounts")
         }
 
-        let (outerAccountId, _) = try await db.withTransaction { outerDb -> (Int, Int?) in
+        let (outerAccountId, _) = try await db.withTransaction {
+            outerDb async throws(Database.Error) -> (Int, Int?) in
             let outerAccount = try await Account.insert {
                 ($0.name, $0.balance)
             } values: {
@@ -321,7 +324,8 @@ struct Test {
             let outerAccountId = outerAccount.id
 
             let innerAccountId: Int? = try? await { () async throws -> Int in
-                try await outerDb.withNestedTransaction(isolation: nil) { innerDb in
+                try await outerDb.withNestedTransaction(isolation: nil) {
+                    innerDb async throws(Database.Error) in
                     let innerAccount = try await Account.insert {
                         ($0.name, $0.balance)
                     } values: {
@@ -364,7 +368,7 @@ struct Test {
         }
 
         // Verify final state
-        let finalAccounts = try await db.read { db in
+        let finalAccounts = try await db.read { db async throws(Database.Error) in
             try await Account.fetchAll(db)
         }
         #expect(finalAccounts.count == 1)
@@ -376,7 +380,7 @@ struct Test {
     @Test
     func `Multiple savepoint rollbacks`() async throws {
         // Clear existing data
-        try await db.write { db in
+        try await db.write { db async throws(Database.Error) in
             try await db.execute("DELETE FROM test_accounts")
         }
 
@@ -410,7 +414,7 @@ struct Test {
 
         #expect(successfulAttempts.count == 3)  // Odd attempts succeed
 
-        let accounts = try await db.read { db in
+        let accounts = try await db.read { db async throws(Database.Error) in
             try await Account.order { $0.id }.fetchAll(db)
         }
         #expect(accounts.count == 3)
@@ -422,15 +426,16 @@ struct Test {
     @Test
     func `Nested transaction performance`() async throws {
         // Clear existing data
-        try await db.write { db in
+        try await db.write { db async throws(Database.Error) in
             try await db.execute("DELETE FROM test_accounts")
         }
 
         let startTime = Date()
 
-        try await db.withTransaction { db in
+        try await db.withTransaction { db async throws(Database.Error) in
             for i in 1...10 {
-                try await db.withNestedTransaction(isolation: nil) { db in
+                try await db.withNestedTransaction(isolation: nil) {
+                    db async throws(Database.Error) in
                     for j in 1...10 {
                         _ = try await Account.insert {
                             ($0.name, $0.balance)
@@ -446,7 +451,7 @@ struct Test {
         let elapsed = Date().timeIntervalSince(startTime)
         print("Nested transaction performance: \(elapsed) seconds for 100 inserts")
 
-        let count = try await db.read { db in
+        let count = try await db.read { db async throws(Database.Error) in
             try await Account.fetchCount(db)
         }
         #expect(count == 100)
