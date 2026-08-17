@@ -13,6 +13,11 @@ let package = Package(
         .package(path: "../../swift-dependencies"),
         .package(path: "../../swift-environment-dependencies"),
         .package(path: "../../../swift-standards/swift-postgresql-standard"),
+        .package(
+            url: "https://github.com/swift-foundations/swift-sql.git",
+            branch: "main",
+            traits: ["PostgreSQLStandardIntegration"]
+        ),
         .package(url: "https://github.com/vapor/postgres-nio.git", from: "1.21.0"),
     ],
     targets: [
@@ -53,6 +58,17 @@ let package = Package(
                 .product(name: "PostgresNIO", package: "postgres-nio"),
             ],
             path: "Records Tests"
+        ),
+        .testTarget(
+            name: "Records SQL Integration Tests",
+            dependencies: [
+                .product(name: "Records", package: "swift-records"),
+                .product(name: "Records SQL Integration", package: "swift-records"),
+                .product(name: "SQL", package: "swift-sql"),
+                .product(name: "SQL Test Support", package: "swift-sql"),
+                .product(name: "Tests Apple Testing Bridge", package: "swift-tests"),
+            ],
+            path: "Records SQL Integration Tests"
         ),
     ],
     swiftLanguageModes: [.v6]

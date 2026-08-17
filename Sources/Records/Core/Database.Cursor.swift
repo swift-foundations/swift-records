@@ -12,7 +12,11 @@ extension Database {
 
         private let fetchNext: @Sendable () async throws -> Element?
 
-        init(fetchNext: @escaping @Sendable () async throws -> Element?) {
+        /// Creates a cursor backed by a single streaming `fetchNext` operation.
+        ///
+        /// Integration targets use this initializer to preserve an underlying cursor's incremental
+        /// delivery. The operation is invoked only when the caller requests the next element.
+        public init(fetchNext: @escaping @Sendable () async throws -> Element?) {
             self.fetchNext = fetchNext
         }
 
