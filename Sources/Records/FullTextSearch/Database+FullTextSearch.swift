@@ -53,7 +53,7 @@ extension Database.Error {
 ///
 /// - Parameter language: The language/configuration name to validate
 /// - Throws: Database.Error.invalidArgument if language contains invalid characters
-private func validateLanguage(_ language: String) throws {
+private func validateLanguage(_ language: String) throws(Database.Error) {
     let allowedCharacterSet = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_"))
     guard language.unicodeScalars.allSatisfy({ allowedCharacterSet.contains($0) }) else {
         throw Database.Error.invalidArgument(
@@ -100,7 +100,7 @@ extension Database.Connection.`Protocol` {
         name: String? = nil,
         concurrently: Bool = true,
         ifNotExists: Bool = true
-    ) async throws {
+    ) async throws(Database.Error) {
         let indexName = name ?? "\(table)_\(column)_idx"
         let concurrentlyKeyword = concurrently ? "CONCURRENTLY " : ""
         let notExists = ifNotExists ? "IF NOT EXISTS " : ""
@@ -111,7 +111,7 @@ extension Database.Connection.`Protocol` {
             USING GIN (\(column.quoted()))
             """
         print("🔍 Creating GIN index '\(indexName)' on table '\(table)' column '\(column)'")
-        do {
+        do throws(Database.Error) {
             try await execute(sql)
             print("✅ Successfully created GIN index '\(indexName)'")
         } catch {
@@ -148,7 +148,7 @@ extension Database.Connection.`Protocol` {
         name: String,
         concurrently: Bool = true,
         ifNotExists: Bool = true
-    ) async throws {
+    ) async throws(Database.Error) {
         let concurrentlyKeyword = concurrently ? "CONCURRENTLY " : ""
         let notExists = ifNotExists ? "IF NOT EXISTS " : ""
 
@@ -189,7 +189,7 @@ extension Database.Connection.`Protocol` {
         name: String? = nil,
         concurrently: Bool = true,
         ifNotExists: Bool = true
-    ) async throws {
+    ) async throws(Database.Error) {
         let indexName = name ?? "\(table)_\(column)_gist_idx"
         let concurrentlyKeyword = concurrently ? "CONCURRENTLY " : ""
         let notExists = ifNotExists ? "IF NOT EXISTS " : ""
@@ -200,7 +200,7 @@ extension Database.Connection.`Protocol` {
             USING GIST (\(column.quoted()))
             """
         print("🔍 Creating GiST index '\(indexName)' on table '\(table)' column '\(column)'")
-        do {
+        do throws(Database.Error) {
             try await execute(sql)
             print("✅ Successfully created GiST index '\(indexName)'")
         } catch {
@@ -234,7 +234,7 @@ extension Database.Connection.`Protocol` {
         to table: String,
         column: String = "search_vector",
         ifNotExists: Bool = true
-    ) async throws {
+    ) async throws(Database.Error) {
         if ifNotExists {
             // Check if column exists using information_schema
             // Note: information_schema stores unquoted lowercase names
@@ -251,7 +251,7 @@ extension Database.Connection.`Protocol` {
                 END $$;
                 """
             print("🔍 Adding column '\(column)' to table '\(table)' with SQL:\n\(sql)")
-            do {
+            do throws(Database.Error) {
                 try await execute(sql)
                 print("✅ Successfully added column '\(column)' to table '\(table)'")
             } catch {
@@ -289,7 +289,7 @@ extension Database.Connection.`Protocol` {
     public func removeSearchVectorColumn(
         from table: String,
         column: String
-    ) async throws {
+    ) async throws(Database.Error) {
         // Drop trigger first (if exists)
         let triggerName = "\(table)_\(column)_update"
         try await execute(
@@ -364,7 +364,7 @@ extension Database.Connection.`Protocol` {
         weightedColumns: [WeightedColumn]? = nil,
         language: String = "english",
         type: SearchVectorTriggerType
-    ) async throws {
+    ) async throws(Database.Error) {
         try validateLanguage(language)
         let triggerName = "\(table)_\(column)_update"
 
@@ -457,7 +457,7 @@ extension Database.Connection.`Protocol` {
         column: String,
         weightedColumns: [WeightedColumn],
         language: String = "english"
-    ) async throws {
+    ) async throws(Database.Error) {
         try validateLanguage(language)
         let vectorExpression = weightedColumns.map { col in
             "setweight(to_tsvector(\(language.quoted(.text)), coalesce(\(col.name.quoted()), '')), \(col.weight.rawValue.quoted(.text)))"
@@ -468,7 +468,7 @@ extension Database.Connection.`Protocol` {
             SET \(column.quoted()) = \(vectorExpression)
             """
         print("🔍 Backfilling search vector column '\(column)' in table '\(table)'")
-        do {
+        do throws(Database.Error) {
             try await execute(sql)
             print("✅ Successfully backfilled search vector")
         } catch {
@@ -515,7 +515,7 @@ extension Database.Connection.`Protocol` {
         weightedColumns: [WeightedColumn],
         language: String = "english",
         indexMethod: FTSIndexMethod = .gin
-    ) async throws {
+    ) async throws(Database.Error) {
         // 1. Add column (if not exists)
         try await addSearchVectorColumn(to: table, column: column)
 
@@ -540,6 +540,7 @@ extension Database.Connection.`Protocol` {
         switch indexMethod {
         case .gin:
             try await createGINIndex(on: table, column: column)
+
         case .gist:
             try await createGiSTIndex(on: table, column: column)
         }

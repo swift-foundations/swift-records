@@ -61,7 +61,7 @@ extension Tagged where Tag == Database.Notification.ChannelNameTag, Underlying =
     ///
     /// - Parameter name: The channel name to validate
     /// - Throws: `Database.Error.invalidNotificationChannels` if validation fails
-    public init(validating name: String) throws {
+    public init(validating name: String) throws(Database.Error) {
         guard Self.isValid(name) else {
             throw Database.Error.invalidNotificationChannels(
                 "Invalid channel name '\(name)': must contain only alphanumeric characters, underscores, and hyphens (max 63 chars)"
@@ -117,7 +117,7 @@ extension Tagged where Tag == Database.Notification.FunctionNameTag, Underlying 
     ///
     /// - Parameter name: The function name to validate
     /// - Throws: `Database.Error.invalidNotificationChannels` if validation fails
-    public init(validating name: String) throws {
+    public init(validating name: String) throws(Database.Error) {
         guard Self.isValid(name) else {
             throw Database.Error.invalidNotificationChannels(
                 "Invalid function name '\(name)': must contain only alphanumeric characters, underscores, and hyphens (max 63 chars)"
@@ -157,7 +157,7 @@ extension Tagged where Tag == Database.Notification.TriggerNameTag, Underlying =
     ///
     /// - Parameter name: The trigger name to validate
     /// - Throws: `Database.Error.invalidNotificationChannels` if validation fails
-    public init(validating name: String) throws {
+    public init(validating name: String) throws(Database.Error) {
         guard Self.isValid(name) else {
             throw Database.Error.invalidNotificationChannels(
                 "Invalid trigger name '\(name)': must contain only alphanumeric characters, underscores, and hyphens (max 63 chars)"

@@ -28,9 +28,11 @@ extension Database {
         }
 
         public func read<T: Sendable>(
-            _ block: @Sendable (any Database.Connection.`Protocol`) async throws -> T
-        ) async throws -> T {
-            try await wrapped.read { db in
+            _ block:
+                @Sendable (any Database.Connection.`Protocol`) async throws(Database.Error) ->
+                T
+        ) async throws(Database.Error) -> T {
+            try await wrapped.read { db async throws(Database.Error) in
                 // Ensure schema is set for this connection
                 try await db.execute("SET search_path TO \(schemaName)")
                 return try await block(db)
@@ -38,16 +40,18 @@ extension Database {
         }
 
         public func write<T: Sendable>(
-            _ block: @Sendable (any Database.Connection.`Protocol`) async throws -> T
-        ) async throws -> T {
-            try await wrapped.write { db in
+            _ block:
+                @Sendable (any Database.Connection.`Protocol`) async throws(Database.Error) ->
+                T
+        ) async throws(Database.Error) -> T {
+            try await wrapped.write { db async throws(Database.Error) in
                 // Ensure schema is set for this connection
                 try await db.execute("SET search_path TO \(schemaName)")
                 return try await block(db)
             }
         }
 
-        public func close() async throws {
+        public func close() async throws(Database.Error) {
             // No-op: Schemas persist for process lifetime (intentional for tests)
             // Cleanup would cause hangs during process exit
         }
@@ -75,7 +79,7 @@ extension Database {
     /// extension Database.TestDatabaseSetupMode {
     ///     static let withMyData = TestDatabaseSetupMode { db in
     ///         try await db.createReminderSchema()
-    ///         try await db.write { conn in
+    ///         try await db.write { (conn) async throws(Database.Error) in
     ///             try await conn.execute("INSERT INTO ...")
     ///         }
     ///     }
@@ -130,7 +134,7 @@ extension Database {
         let database = await TestConnection(configuration: config)
 
         // Create and use test schema
-        try await database.write { db in
+        try await database.write { db async throws(Database.Error) in
             try await db.execute("CREATE SCHEMA \(schemaName)")
             try await db.execute("SET search_path TO \(schemaName)")
         }
@@ -161,7 +165,7 @@ extension Database {
         let pool = await TestConnection(configuration: config)
 
         // Create and use test schema
-        try await pool.write { db in
+        try await pool.write { db async throws(Database.Error) in
             try await db.execute("CREATE SCHEMA \(schemaName)")
             try await db.execute("SET search_path TO \(schemaName)")
         }

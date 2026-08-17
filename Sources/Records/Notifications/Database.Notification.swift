@@ -91,7 +91,11 @@ extension Database {
         ///   - payload: The notification payload
         ///   - backendPID: The PostgreSQL backend process ID
         /// - Throws: `Database.Error.invalidNotificationChannels` if channel name is invalid
-        internal init(rawChannel: String, payload: String, backendPID: Int32) throws {
+        internal init(
+            rawChannel: String,
+            payload: String,
+            backendPID: Int32
+        ) throws(Database.Error) {
             self.channel = try ChannelName(validating: rawChannel)
             self.payload = payload
             self.backendPID = backendPID

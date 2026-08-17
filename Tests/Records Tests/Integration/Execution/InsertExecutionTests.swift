@@ -45,7 +45,7 @@ extension SnapshotIntegrationTests.Execution.Insert {
         @Test
         func `INSERT with all fields specified`() async throws {
             let now = Date()
-            let inserted = try await db.write { db in
+            let inserted = try await db.write { db async throws(Database.Error) in
                 try await Reminder.insert {
                     Reminder.Draft(
                         assignedUserID: 1,
@@ -72,7 +72,7 @@ extension SnapshotIntegrationTests.Execution.Insert {
             #expect(reminder.notes == "Important task")
 
             // Cleanup
-            try await db.write { db in
+            try await db.write { db async throws(Database.Error) in
                 try await Reminder
                     .find(reminder.id)
                     .delete()
@@ -120,7 +120,7 @@ extension SnapshotIntegrationTests.Execution.Insert {
 
         @Test
         func `INSERT with NULL optional fields`() async throws {
-            let inserted = try await db.write { db in
+            let inserted = try await db.write { db async throws(Database.Error) in
                 try await Reminder.insert {
                     Reminder.Draft(
                         assignedUserID: nil,
@@ -140,7 +140,7 @@ extension SnapshotIntegrationTests.Execution.Insert {
             #expect(reminder.dueDate == nil)
 
             // Cleanup
-            try await db.write { db in
+            try await db.write { db async throws(Database.Error) in
                 try await Reminder
                     .find(reminder.id)
                     .delete()
@@ -192,7 +192,7 @@ extension SnapshotIntegrationTests.Execution.Insert {
         @Test
         func `INSERT and verify with SELECT`() async throws {
             // Insert new reminder
-            let inserted = try await db.write { db in
+            let inserted = try await db.write { db async throws(Database.Error) in
                 try await Reminder.insert {
                     Reminder.Draft(
                         notes: "Test notes",
@@ -207,7 +207,7 @@ extension SnapshotIntegrationTests.Execution.Insert {
             let insertedId = try #require(inserted.first?.id)
 
             // Verify with SELECT
-            let fetched = try await db.read { db in
+            let fetched = try await db.read { db async throws(Database.Error) in
                 try await Reminder.where { $0.id == insertedId }.fetchOne(db)
             }
 
@@ -216,7 +216,7 @@ extension SnapshotIntegrationTests.Execution.Insert {
             #expect(fetched?.notes == "Test notes")
 
             // Cleanup
-            try await db.write { db in
+            try await db.write { db async throws(Database.Error) in
                 try await Reminder
                     .find(insertedId)
                     .delete()
@@ -263,7 +263,7 @@ extension SnapshotIntegrationTests.Execution.Insert {
 
         @Test
         func `INSERT into different lists`() async throws {
-            let inserted = try await db.write { db in
+            let inserted = try await db.write { db async throws(Database.Error) in
                 try await Reminder.insert {
                     Reminder.Draft(remindersListID: 1, title: "Home task")
                     Reminder.Draft(remindersListID: 2, title: "Work task")
@@ -278,7 +278,7 @@ extension SnapshotIntegrationTests.Execution.Insert {
 
             // Cleanup
             let ids = inserted.map { $0.id }
-            try await db.write { db in
+            try await db.write { db async throws(Database.Error) in
                 try await Reminder
                     .find(ids)
                     .delete()
@@ -289,7 +289,7 @@ extension SnapshotIntegrationTests.Execution.Insert {
         @Test
         func `INSERT with date fields`() async throws {
             let futureDate = Date().addingTimeInterval(86400)  // Tomorrow
-            let inserted = try await db.write { db in
+            let inserted = try await db.write { db async throws(Database.Error) in
                 try await Reminder.insert {
                     Reminder.Draft(
                         dueDate: futureDate,
@@ -320,7 +320,7 @@ extension SnapshotIntegrationTests.Execution.Insert {
             }
 
             // Cleanup
-            try await db.write { db in
+            try await db.write { db async throws(Database.Error) in
                 try await Reminder
                     .find(reminder.id)
                     .delete()
@@ -334,7 +334,7 @@ extension SnapshotIntegrationTests.Execution.Insert {
             let uniqueTitle = "No return test \(UUID())"
 
             // Insert without RETURNING - just verify it doesn't throw
-            try await db.write { db in
+            try await db.write { db async throws(Database.Error) in
                 try await Reminder.insert {
                     Reminder.Draft(
                         remindersListID: 1,
@@ -345,14 +345,14 @@ extension SnapshotIntegrationTests.Execution.Insert {
             }
 
             // Verify it was inserted by counting
-            let count = try await db.read { db in
+            let count = try await db.read { db async throws(Database.Error) in
                 try await Reminder.where { $0.title == uniqueTitle }.fetchAll(db)
             }
 
             #expect(count.count >= 1)
 
             // Cleanup
-            try await db.write { db in
+            try await db.write { db async throws(Database.Error) in
                 try await Reminder
                     .where { $0.title == uniqueTitle }
                     .delete()

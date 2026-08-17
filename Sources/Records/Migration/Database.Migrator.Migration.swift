@@ -29,28 +29,28 @@ extension Database.Migrator {
 
 extension Database.Migrator.Migration {
     /// Fetch all applied migration identifiers
-    static func fetchAppliedIdentifiers(_ db: any Database.Connection.`Protocol`) async throws
-        -> Set<
-            String
-        >
-    {
+    static func fetchAppliedIdentifiers(
+        _ db: some Database.Connection.`Protocol`
+    ) async throws(Database.Error) -> Set<String> {
         let migrations = try await Database.Migrator.Migration.fetchAll(db)
         return Set(migrations.map { $0.identifier })
     }
 
     /// Record a migration as applied
-    static func recordMigration(identifier: String, db: any Database.Connection.`Protocol`)
-        async throws
-    {
+    static func recordMigration(
+        identifier: String,
+        db: some Database.Connection.`Protocol`
+    ) async throws(Database.Error) {
         try await Database.Migrator.Migration.insert {
             Database.Migrator.Migration(identifier: identifier)
         }.execute(db)
     }
 
     /// Check if a specific migration has been applied
-    static func hasApplied(identifier: String, db: any Database.Connection.`Protocol`) async throws
-        -> Bool
-    {
+    static func hasApplied(
+        identifier: String,
+        db: some Database.Connection.`Protocol`
+    ) async throws(Database.Error) -> Bool {
         let migration = try await Database.Migrator.Migration
             .where { $0.identifier == identifier }
             .fetchOne(db)

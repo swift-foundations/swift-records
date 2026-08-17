@@ -4,7 +4,7 @@ import PostgresNIO
 
 /// Global storage for run tasks - prevents Task deallocation which auto-cancels
 /// This is critical for tests: Task.deinit auto-cancels even without explicit cancel()
-private nonisolated(unsafe) var _globalRunTasks: [Task<Void, Never>] = []
+nonisolated(unsafe) private var _globalRunTasks: [Task<Void, Never>] = []
 
 extension Database {
     /// A wrapper that manages a PostgresClient and its lifecycle.
@@ -45,8 +45,11 @@ extension Database {
                 // Critical: Task.deinit auto-cancels, causing hangs
                 _globalRunTasks.append(self.runTask)
 
-                // Give the client a moment to initialize
-                try? await Task.sleep(nanoseconds: 10_000_000)  // 10ms
+                // Give the client a moment to initialize; cancellation during
+                // this best-effort delay is not an error.
+                do {
+                    try await Task.sleep(nanoseconds: 10_000_000)  // 10ms
+                } catch {}
             } else {
                 // Create a no-op task that never runs
                 self.runTask = Task {}
@@ -55,21 +58,39 @@ extension Database {
 
         /// Performs a read-only database operation.
         public func read<T: Sendable>(
-            _ block: @Sendable (any Database.Connection.`Protocol`) async throws -> T
-        ) async throws -> T {
-            try await client.withConnection { postgresConnection in
-                let connection = Database.Connection(postgresConnection)
-                return try await block(connection)
+            _ block:
+                // swiftlint:disable:next no_any_protocol_existential
+                @Sendable (any Database.Connection.`Protocol`) async throws(Database.Error) ->
+                T
+        ) async throws(Database.Error) -> T {
+            do {
+                return try await client.withConnection { postgresConnection in
+                    let connection = Database.Connection(postgresConnection)
+                    return try await block(connection)
+                }
+            } catch let error as Database.Error {
+                throw error
+            } catch {
+                throw .queryFailed(underlying: error)
             }
         }
 
         /// Performs a database operation that can write.
         public func write<T: Sendable>(
-            _ block: @Sendable (any Database.Connection.`Protocol`) async throws -> T
-        ) async throws -> T {
-            try await client.withConnection { postgresConnection in
-                let connection = Database.Connection(postgresConnection)
-                return try await block(connection)
+            _ block:
+                // swiftlint:disable:next no_any_protocol_existential
+                @Sendable (any Database.Connection.`Protocol`) async throws(Database.Error) ->
+                T
+        ) async throws(Database.Error) -> T {
+            do {
+                return try await client.withConnection { postgresConnection in
+                    let connection = Database.Connection(postgresConnection)
+                    return try await block(connection)
+                }
+            } catch let error as Database.Error {
+                throw error
+            } catch {
+                throw .queryFailed(underlying: error)
             }
         }
 
@@ -77,7 +98,7 @@ extension Database {
         ///
         /// PostgresClient manages its own lifecycle via `run()`; cancelling the
         /// run task is the shutdown mechanism (there is no direct `close()`).
-        public func close() async throws {
+        public func close() async throws(Database.Error) {
             runTask.cancel()
         }
 
@@ -114,7 +135,7 @@ extension Database {
         )
 
         let client =
-            if let logger = logger {
+            if let logger {
                 PostgresClient(configuration: config, backgroundLogger: logger)
             } else {
                 PostgresClient(configuration: config)
@@ -147,7 +168,7 @@ extension Database {
         )
 
         let client =
-            if let logger = logger {
+            if let logger {
                 PostgresClient(configuration: config, backgroundLogger: logger)
             } else {
                 PostgresClient(configuration: config)

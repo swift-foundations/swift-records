@@ -123,7 +123,10 @@ extension Database {
         private var migrations:
             [(
                 identifier: String,
-                migrate: @Sendable (any Database.Connection.`Protocol`) async throws -> Void
+                migrate:
+                    // swiftlint:disable:next no_any_protocol_existential
+                    @Sendable (any Database.Connection.`Protocol`) async throws(Database.Error) ->
+                    Void
             )] = []
         #if DEBUG
             /// If true, the migrator recreates the whole database from scratch
@@ -148,7 +151,10 @@ extension Database {
         public mutating func registerMigration(
             _ identifier: String,
             foreignKeyChecks: ForeignKeyChecks? = nil,
-            migrate: @escaping @Sendable (any Database.Connection.`Protocol`) async throws -> Void
+            migrate:
+                // swiftlint:disable:next no_any_protocol_existential
+                @escaping @Sendable (any Database.Connection.`Protocol`) async throws(Database
+                .Error) -> Void
         ) {
             // Check for duplicate identifiers. Registering the same identifier
             // twice is a programmer error in migration setup: fail loud in EVERY
@@ -166,9 +172,13 @@ extension Database {
 
         /// Migrates the database.
         ///
-        /// - Parameter writer: The database to migrate.
-        public func migrate(_ writer: any Writer) async throws {
-            try await writer.write { db in
+        /// - Parameter writer: The database to migrate. Deliberately an
+        ///   existential: the migrator accepts any writer implementation.
+        public func migrate(
+            // swiftlint:disable:next no_any_protocol_existential
+            _ writer: any Writer
+        ) async throws(Database.Error) {
+            try await writer.write { db async throws(Database.Error) in
                 // Create migration tracking table if it doesn't exist
                 try await createMigrationTable(db)
 
@@ -201,20 +211,22 @@ extension Database {
         ///
         /// - Parameter db: A database connection.
         /// - Returns: A set of applied migration identifiers.
-        public func appliedIdentifiers(_ db: any Database.Connection.`Protocol`) async throws
-            -> Set<
-                String
-            >
-        {
+        public func appliedIdentifiers(
+            _ db: some Database.Connection.`Protocol`
+        ) async throws(Database.Error) -> Set<String> {
             try await fetchAppliedIdentifiers(db)
         }
 
         /// Returns true if the database has completed all registered migrations.
         ///
-        /// - Parameter writer: The database to check.
+        /// - Parameter writer: The database to check. Deliberately an
+        ///   existential: the migrator accepts any writer implementation.
         /// - Returns: True if all migrations have been applied.
-        public func hasCompletedMigrations(_ writer: any Writer) async throws -> Bool {
-            try await writer.read { db in
+        public func hasCompletedMigrations(
+            // swiftlint:disable:next no_any_protocol_existential
+            _ writer: any Writer
+        ) async throws(Database.Error) -> Bool {
+            try await writer.read { db async throws(Database.Error) -> Bool in
                 let appliedIdentifiers = try await fetchAppliedIdentifiers(db)
                 return migrations.allSatisfy { appliedIdentifiers.contains($0.identifier) }
             }
@@ -222,7 +234,9 @@ extension Database {
 
         // MARK: - Private Methods
 
-        private func createMigrationTable(_ db: any Database.Connection.`Protocol`) async throws {
+        private func createMigrationTable(
+            _ db: some Database.Connection.`Protocol`
+        ) async throws(Database.Error) {
             try await db.execute(
                 """
                     CREATE TABLE IF NOT EXISTS __database_migrations (
@@ -233,9 +247,9 @@ extension Database {
             )
         }
 
-        private func fetchAppliedIdentifiers(_ db: any Database.Connection.`Protocol`) async throws
-            -> Set<String>
-        {
+        private func fetchAppliedIdentifiers(
+            _ db: some Database.Connection.`Protocol`
+        ) async throws(Database.Error) -> Set<String> {
             // Ensure migration table exists (for backward compatibility)
             try await db.execute(
                 """
@@ -252,9 +266,12 @@ extension Database {
 
         private func applyMigration(
             identifier: String,
-            migrate: @Sendable (any Database.Connection.`Protocol`) async throws -> Void,
-            db: any Database.Connection.`Protocol`
-        ) async throws {
+            migrate:
+                // swiftlint:disable:next no_any_protocol_existential
+                @Sendable (any Database.Connection.`Protocol`) async throws(Database.Error) ->
+                Void,
+            db: some Database.Connection.`Protocol`
+        ) async throws(Database.Error) {
             // Handle foreign key checks
             let restoreForeignKeys = foreignKeyChecks == .deferred
 
@@ -262,7 +279,7 @@ extension Database {
                 try await db.execute("SET session_replication_role = 'replica'")
             }
 
-            do {
+            do throws(Database.Error) {
                 // Run the migration
                 try await migrate(db)
 
@@ -277,23 +294,28 @@ extension Database {
                 }
             } catch {
                 if restoreForeignKeys {
-                    try? await db.execute("SET session_replication_role = 'origin'")
+                    // Best-effort restore: the migration failure below is the
+                    // error that matters; a restore failure must not mask it.
+                    do throws(Database.Error) {
+                        try await db.execute("SET session_replication_role = 'origin'")
+                    } catch {}
                 }
                 throw error
             }
         }
 
         private func hasSchemaChanges(
-            _ db: any Database.Connection.`Protocol`,
+            _ db: some Database.Connection.`Protocol`,
             appliedIdentifiers: Set<String>
-        ) async throws -> Bool {
+        ) async throws(Database.Error) -> Bool {
             // Check if migrations have been removed or renamed
             let registeredIdentifiers = Set(migrations.map(\.identifier))
             return !appliedIdentifiers.isSubset(of: registeredIdentifiers)
         }
         #if DEBUG
-            private func eraseDatabaseContent(_ db: any Database.Connection.`Protocol`) async throws
-            {
+            private func eraseDatabaseContent(
+                _ db: some Database.Connection.`Protocol`
+            ) async throws(Database.Error) {
                 // Drop all tables in the public schema
                 try await db.execute(
                     """

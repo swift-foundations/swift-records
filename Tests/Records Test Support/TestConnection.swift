@@ -73,7 +73,7 @@ private actor SharedTestClient {
 private let sharedTestClient = SharedTestClient()
 
 /// Register shutdown handler on first use
-private nonisolated(unsafe) var shutdownHandlerRegistered = false
+nonisolated(unsafe) private var shutdownHandlerRegistered = false
 
 /// Test database connection using shared PostgresClient
 ///
@@ -101,18 +101,18 @@ final class TestConnection: Database.Writer, @unchecked Sendable {
     }
 
     func read<T: Sendable>(
-        _ block: @Sendable (any Database.Connection.`Protocol`) async throws -> T
-    ) async throws -> T {
+        _ block: @Sendable (any Database.Connection.`Protocol`) async throws(Database.Error) -> T
+    ) async throws(Database.Error) -> T {
         try await runner.read(block)
     }
 
     func write<T: Sendable>(
-        _ block: @Sendable (any Database.Connection.`Protocol`) async throws -> T
-    ) async throws -> T {
+        _ block: @Sendable (any Database.Connection.`Protocol`) async throws(Database.Error) -> T
+    ) async throws(Database.Error) -> T {
         try await runner.write(block)
     }
 
-    func close() async throws {
+    func close() async throws(Database.Error) {
         // Shutdown handled by global manager
     }
 }

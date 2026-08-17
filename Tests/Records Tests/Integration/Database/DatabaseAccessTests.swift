@@ -20,7 +20,7 @@ struct Test {
         let results = await withTaskGroup(of: Int?.self) { group in
             for i in 1...10 {
                 group.addTask {
-                    try? await database.write { _ in
+                    try? await database.write { _ async throws(Database.Error) in
                         // Simulate work
                         try? await Task.sleep(nanoseconds: 10_000)
                         return i
@@ -30,7 +30,7 @@ struct Test {
 
             var collected: [Int] = []
             for await result in group {
-                if let result = result {
+                if let result {
                     collected.append(result)
                 }
             }
@@ -56,7 +56,7 @@ struct Test {
             for _ in 1...5 {
                 group.addTask {
                     let taskStart = Date()
-                    _ = try? await database.read { db in
+                    _ = try? await database.read { db async throws(Database.Error) in
                         // Simulate read operation
                         try? await Task.sleep(nanoseconds: 100_000_000)  // 0.1 seconds
                         return try? await Reminder.fetchCount(db)
@@ -88,7 +88,7 @@ struct Test {
     func `Database.Pool serializes write operations`() async throws {
         do {
             // Start with known sample data (6 reminders from withReminderData)
-            let initialCount = try await database.read { db in
+            let initialCount = try await database.read { db async throws(Database.Error) in
                 try await Reminder.fetchCount(db)
             }
 
@@ -111,7 +111,7 @@ struct Test {
             await withTaskGroup(of: Void.self) { group in
                 for i in 1...5 {
                     group.addTask {
-                        try? await database.write { db in
+                        try? await database.write { db async throws(Database.Error) in
                             // Record when this write starts
                             await collector.recordWrite(i)
 
@@ -137,7 +137,7 @@ struct Test {
             #expect(writeOrder.count == 5)
 
             // Verify all reminders were created (6 initial + 5 new = 11)
-            let finalCount = try await database.read { db in
+            let finalCount = try await database.read { db async throws(Database.Error) in
                 try await Reminder.fetchCount(db)
             }
             #expect(finalCount == initialCount + 5)
@@ -151,7 +151,7 @@ struct Test {
     func `Read and write operations don't interfere`() async throws {
         do {
             // Start with known state
-            let initialCount = try await database.read { db in
+            let initialCount = try await database.read { db async throws(Database.Error) in
                 try await Reminder.fetchCount(db)
             }
 
@@ -161,7 +161,7 @@ struct Test {
                 for i in 1...3 {
                     group.addTask {
                         do {
-                            try await database.write { db in
+                            try await database.write { db async throws(Database.Error) in
                                 try await Reminder.insert {
                                     Reminder.Draft(
                                         notes: "Test isolation",
@@ -181,7 +181,7 @@ struct Test {
                 for i in 1...3 {
                     group.addTask {
                         do {
-                            let count = try await database.read { db in
+                            let count = try await database.read { db async throws(Database.Error) in
                                 try await Reminder.fetchCount(db)
                             }
                             return "read-\(i)-count-\(count)"
@@ -199,7 +199,7 @@ struct Test {
             }
 
             // Final count should reflect all writes
-            let finalCount = try await database.read { db in
+            let finalCount = try await database.read { db async throws(Database.Error) in
                 try await Reminder.fetchCount(db)
             }
             #expect(finalCount == initialCount + 3)
@@ -230,7 +230,7 @@ struct Test {
                     let count = await counter.increment()
 
                     // Also do a database operation
-                    _ = try? await database.read { db in
+                    _ = try? await database.read { db async throws(Database.Error) in
                         try await Reminder.fetchCount(db)
                     }
 

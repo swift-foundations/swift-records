@@ -16,7 +16,7 @@ import Testing
 extension Database.Writer {
     /// Creates the Reminder test schema (matches upstream swift-structured-queries)
     package func createReminderSchema() async throws {
-        try await self.write { db in
+        try await self.write { db async throws(Database.Error) in
             // Create remindersLists table
             try await db.execute(
                 """
@@ -97,7 +97,7 @@ extension Database.Writer {
 
     /// Inserts Reminder sample data (matches upstream test data)
     package func insertReminderSampleData() async throws {
-        try await self.write { db in
+        try await self.write { db async throws(Database.Error) in
             // Insert reminders lists
             try await db.execute(
                 """
@@ -188,7 +188,7 @@ extension Database.Writer {
 /// This is intentionally a global variable (not in an actor) to survive process exit
 /// Marked nonisolated(unsafe) because it's only appended to, never read, and
 /// concurrent appends are acceptable (we don't care about order or duplicates)
-private nonisolated(unsafe) var _testDatabaseStorage: [Database.TestDatabase] = []
+nonisolated(unsafe) private var _testDatabaseStorage: [Database.TestDatabase] = []
 
 /// Storage function - appends database to global storage to prevent deallocation
 private func storeTestDatabase(_ database: Database.TestDatabase) {
@@ -218,13 +218,24 @@ public final class LazyTestDatabase: Database.Writer, NotificationCapable, @unch
 
     // Lazy database creation with Task-based synchronization
     private var _database: Database.TestDatabase?
-    private var _creationTask: Task<Database.TestDatabase, Error>?
+    private var _creationTask: Task<Database.TestDatabase, Swift.Error>?
 
     /// Exposes the underlying PostgresClient if available (for notification support)
     public var postgresClient: PostgresClient? {
-        get async throws {
-            let db = try await getOrCreateDatabase()
-            return db.postgresClient
+        get async throws(Database.Error) {
+            try await database().postgresClient
+        }
+    }
+
+    /// Resolves the lazily created database, mapping creation failures into
+    /// ``Database/Error``.
+    private func database() async throws(Database.Error) -> Database.TestDatabase {
+        do {
+            return try await getOrCreateDatabase()
+        } catch let error as Database.Error {
+            throw error
+        } catch {
+            throw .queryFailed(underlying: error)
         }
     }
 
@@ -240,7 +251,7 @@ public final class LazyTestDatabase: Database.Writer, NotificationCapable, @unch
         }
 
         // Create new task for database creation
-        let task = Task<Database.TestDatabase, Error> {
+        let task = Task<Database.TestDatabase, Swift.Error> {
             // Create database with single connection
             let db = try await Database.testDatabase(
                 configuration: nil,
@@ -273,20 +284,18 @@ public final class LazyTestDatabase: Database.Writer, NotificationCapable, @unch
     }
 
     public func read<T: Sendable>(
-        _ block: @Sendable (any Database.Connection.`Protocol`) async throws -> T
-    ) async throws -> T {
-        let db = try await getOrCreateDatabase()
-        return try await db.read(block)
+        _ block: @Sendable (any Database.Connection.`Protocol`) async throws(Database.Error) -> T
+    ) async throws(Database.Error) -> T {
+        try await database().read(block)
     }
 
     public func write<T: Sendable>(
-        _ block: @Sendable (any Database.Connection.`Protocol`) async throws -> T
-    ) async throws -> T {
-        let db = try await getOrCreateDatabase()
-        return try await db.write(block)
+        _ block: @Sendable (any Database.Connection.`Protocol`) async throws(Database.Error) -> T
+    ) async throws(Database.Error) -> T {
+        try await database().write(block)
     }
 
-    public func close() async throws {
+    public func close() async throws(Database.Error) {
         // No-op: databases stored in global actor are never cleaned up
         // This prevents ClientRunner deinit hangs
     }

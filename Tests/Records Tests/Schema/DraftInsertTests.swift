@@ -32,7 +32,7 @@ struct Test {
 
     init() async throws {
         // Create test table
-        try await database.write { db in
+        try await database.write { db async throws(Database.Error) in
             try await db.execute(
                 """
                 CREATE TABLE IF NOT EXISTS draft_test_records (
@@ -56,7 +56,7 @@ struct Test {
         let hour = Date()
 
         // Insert using Draft without providing ID
-        let insertedRecord = try await database.write { db in
+        let insertedRecord = try await database.write { db async throws(Database.Error) in
             try await DraftTestRecord.insert {
                 DraftTestRecord.Draft(
                     repositoryId: repositoryId,
@@ -89,7 +89,7 @@ struct Test {
         let hour = Date()
 
         // Insert using Draft with explicit ID
-        let insertedRecord = try await database.write { db in
+        let insertedRecord = try await database.write { db async throws(Database.Error) in
             try await DraftTestRecord.insert {
                 DraftTestRecord.Draft(
                     id: explicitId,
@@ -119,7 +119,7 @@ struct Test {
             let hour = Date()
 
             // First insert
-            try await database.write { db in
+            try await database.write { db async throws(Database.Error) in
                 try await DraftTestRecord.insert {
                     DraftTestRecord.Draft(
                         repositoryId: repositoryId,
@@ -133,7 +133,7 @@ struct Test {
             }
 
             // Upsert with conflict resolution (same repositoryId and hour)
-            let upsertedRecord = try await database.write { db in
+            let upsertedRecord = try await database.write { db async throws(Database.Error) in
                 try await DraftTestRecord.insert {
                     DraftTestRecord.Draft(
                         repositoryId: repositoryId,
@@ -160,7 +160,7 @@ struct Test {
             #expect(upsertedRecord?.notes == "Updated")
 
             // Verify only one record exists
-            let count = try await database.read { db in
+            let count = try await database.read { db async throws(Database.Error) in
                 try await DraftTestRecord
                     .where { $0.repositoryId.eq(repositoryId) }
                     .fetchCount(db)
@@ -178,7 +178,7 @@ struct Test {
         let baseTime = Date()
 
         // Insert multiple drafts at once
-        let insertedRecords = try await database.write { db in
+        let insertedRecords = try await database.write { db async throws(Database.Error) in
             try await DraftTestRecord.insert {
                 DraftTestRecord.Draft(
                     repositoryId: repositoryId,
@@ -232,7 +232,7 @@ struct Test {
             let baseTime = Date()
 
             // Insert mix of drafts - some with explicit ID, some without
-            let insertedRecords = try await database.write { db in
+            let insertedRecords = try await database.write { db async throws(Database.Error) in
                 try await DraftTestRecord.insert {
                     // With explicit ID
                     DraftTestRecord.Draft(
@@ -319,7 +319,7 @@ struct Test {
             // Build insert with Draft (no ID)
 
             // Execute and verify it works
-            let result = try await database.write { db in
+            let result = try await database.write { db async throws(Database.Error) in
                 try await DraftTestRecord.insert {
                     DraftTestRecord.Draft(
                         repositoryId: repositoryId,

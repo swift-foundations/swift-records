@@ -9,10 +9,22 @@ let package = Package(
     ],
     dependencies: [
         .package(path: ".."),
-        .package(path: "../../swift-tests"),
-        .package(path: "../../swift-dependencies"),
-        .package(path: "../../swift-environment-dependencies"),
-        .package(path: "../../../swift-standards/swift-postgresql-standard"),
+        .package(
+            url: "https://github.com/swift-foundations/swift-tests.git",
+            branch: "main"
+        ),
+        .package(
+            url: "https://github.com/swift-foundations/swift-dependencies.git",
+            branch: "main"
+        ),
+        .package(
+            url: "https://github.com/swift-foundations/swift-environment-dependencies.git",
+            branch: "main"
+        ),
+        .package(
+            url: "https://github.com/swift-standards/swift-postgresql-standard.git",
+            branch: "main"
+        ),
         .package(url: "https://github.com/vapor/postgres-nio.git", from: "1.21.0"),
     ],
     targets: [

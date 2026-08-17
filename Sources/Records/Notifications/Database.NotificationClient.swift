@@ -80,8 +80,8 @@ extension Database {
         /// variables or sensible defaults.
         public static let shared: NotificationClient = {
             do {
-                return try NotificationClient(
-                    configuration: .notificationDefaults()
+                return NotificationClient(
+                    configuration: try .notificationDefaults()
                 )
             } catch {
                 fatalError("Failed to initialize notification client: \(error)")
@@ -97,7 +97,7 @@ extension Database {
         /// Initialize a notification client with custom configuration
         ///
         /// - Parameter configuration: PostgresClient configuration optimized for notifications
-        public init(configuration: PostgresClient.Configuration) throws {
+        public init(configuration: PostgresClient.Configuration) {
             self.client = PostgresClient(
                 configuration: configuration,
                 backgroundLogger: Logger(label: "database.notifications.postgres")
@@ -123,9 +123,17 @@ extension Database {
         /// - Returns: The result of the block
         /// - Throws: Connection errors or block errors
         func withConnection<T: Sendable>(
-            _ block: @Sendable (PostgresConnection) async throws -> T
-        ) async throws -> T {
-            try await client.withConnection(block)
+            _ block: @Sendable (PostgresConnection) async throws(Database.Error) -> T
+        ) async throws(Database.Error) -> T {
+            do {
+                return try await client.withConnection { connection in
+                    try await block(connection)
+                }
+            } catch let error as Database.Error {
+                throw error
+            } catch {
+                throw .queryFailed(underlying: error)
+            }
         }
     }
 }
@@ -139,7 +147,9 @@ extension PostgresClient.Configuration {
     /// - Extended idle timeout (1 hour)
     /// - Keep-alive pings (5 minutes)
     /// - Reasonable connection limits
-    public static func notificationDefaults() throws -> PostgresClient.Configuration {
+    public static func notificationDefaults() throws(Database.ConfigurationError)
+        -> PostgresClient.Configuration
+    {
         var config = try PostgresClient.Configuration.fromEnvironment()
 
         // Notification-specific options

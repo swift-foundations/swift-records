@@ -20,7 +20,7 @@ struct Test {
 
     @Test
     func `Insert and retrieve JSONB data`() async throws {
-        try await db.write { db in
+        try await db.write { db async throws(Database.Error) in
             // Create the test table
             try await db.execute(
                 """
@@ -64,7 +64,7 @@ struct Test {
     @Test
     func `Update JSONB columns`() async throws {
         do {
-            try await db.write { db in
+            try await db.write { db async throws(Database.Error) in
                 // Create the test table
                 try await db.execute(
                     """
@@ -118,7 +118,7 @@ struct Test {
     @Test
     func `JSONB with empty arrays and dictionaries`() async throws {
         do {
-            try await db.write { db in
+            try await db.write { db async throws(Database.Error) in
                 // Create the test table
                 try await db.execute(
                     """
@@ -160,7 +160,7 @@ struct Test {
     @Test
     func `JSONB with special characters`() async throws {
         do {
-            try await db.write { db in
+            try await db.write { db async throws(Database.Error) in
                 // Create the test table
                 try await db.execute(
                     """
@@ -209,7 +209,7 @@ struct Test {
     @Test
     func `JSONB with optional columns`() async throws {
         do {
-            try await db.write { db in
+            try await db.write { db async throws(Database.Error) in
                 // Create the table
                 try await db.execute(
                     """

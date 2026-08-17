@@ -50,7 +50,7 @@ extension Database.Notification {
         /// - Parameter rawName: The channel name to validate
         /// - Throws: `Database.Error.invalidNotificationChannels` if validation fails
         @inlinable
-        public init(validating rawName: String) throws {
+        public init(validating rawName: String) throws(Database.Error) {
             self.name = try ChannelName(validating: rawName)
         }
     }

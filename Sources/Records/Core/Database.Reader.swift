@@ -40,9 +40,12 @@ extension Database {
         /// }
         /// ```
         func read<T: Sendable>(
-            _ block: @Sendable (any Database.Connection.`Protocol`) async throws -> T
-        ) async throws -> T
+            _ block:
+                // swiftlint:disable:next no_any_protocol_existential
+                @Sendable (any Database.Connection.`Protocol`) async throws(Database.Error) ->
+                T
+        ) async throws(Database.Error) -> T
 
-        func close() async throws
+        func close() async throws(Database.Error)
     }
 }

@@ -18,7 +18,7 @@ struct StatementExtensionTestsNew {
     func `Statement.execute(db) works correctly`() async throws {
         do {
             // Test execute with insert statement
-            try await database.write { db in
+            try await database.write { db async throws(Database.Error) in
                 try await Reminder.insert {
                     Reminder.Draft(
                         notes: "Test notes",
@@ -29,7 +29,7 @@ struct StatementExtensionTestsNew {
             }
 
             // Verify insertion (6 from sample data + 1 new = 7)
-            let count = try await database.read { db in
+            let count = try await database.read { db async throws(Database.Error) in
                 try await Reminder.fetchCount(db)
             }
 
@@ -45,7 +45,7 @@ struct StatementExtensionTestsNew {
         // Sample data already loaded by withReminderData()
 
         // Test fetchAll using static method
-        let reminders = try await database.read { db in
+        let reminders = try await database.read { db async throws(Database.Error) in
             try await Reminder.fetchAll(db)
         }
 
@@ -59,7 +59,7 @@ struct StatementExtensionTestsNew {
         // Sample data already loaded by withReminderData()
 
         // Test fetchOne
-        let reminder = try await database.read { db in
+        let reminder = try await database.read { db async throws(Database.Error) in
             try await Reminder
                 .where { $0.title == "Groceries" }
                 .asSelect()
@@ -75,14 +75,14 @@ struct StatementExtensionTestsNew {
         // Sample data already loaded by withReminderData()
 
         // Test fetchCount using static method
-        let totalCount = try await database.read { db in
+        let totalCount = try await database.read { db async throws(Database.Error) in
             try await Reminder.fetchCount(db)
         }
 
         #expect(totalCount == 6)
 
         // Test fetchCount with filter
-        let filteredCount = try await database.read { db in
+        let filteredCount = try await database.read { db async throws(Database.Error) in
             try await Reminder
                 .where { $0.isFlagged == true }
                 .asSelect()
@@ -97,15 +97,15 @@ struct StatementExtensionTestsNew {
         // Sample data already loaded by withReminderData()
 
         // Test the Table.all pattern from SharingGRDB
-        let allReminders = try await database.read { db in
+        let allReminders = try await database.read { db async throws(Database.Error) in
             try await Reminder.all.fetchAll(db)
         }
 
-        let allLists = try await database.read { db in
+        let allLists = try await database.read { db async throws(Database.Error) in
             try await RemindersList.all.fetchAll(db)
         }
 
-        let allTags = try await database.read { db in
+        let allTags = try await database.read { db async throws(Database.Error) in
             try await Tag.all.fetchAll(db)
         }
 
@@ -119,7 +119,7 @@ struct StatementExtensionTestsNew {
         // Sample data already loaded by withReminderData()
 
         // Test complex query with where and order
-        let flaggedReminders = try await database.read { db in
+        let flaggedReminders = try await database.read { db async throws(Database.Error) in
             try await Reminder
                 .where { $0.isFlagged == true }
                 .order(by: \.title)
@@ -131,7 +131,7 @@ struct StatementExtensionTestsNew {
         #expect(flaggedReminders.first?.title == "Haircut")
 
         // Test query with multiple conditions
-        let specificReminder = try await database.read { db in
+        let specificReminder = try await database.read { db async throws(Database.Error) in
             try await Reminder
                 .where { $0.title == "Groceries" && $0.remindersListID == 1 }
                 .asSelect()
@@ -147,14 +147,14 @@ struct StatementExtensionTestsNew {
         // Sample data already loaded by withReminderData()
 
         // Test update
-        try await database.write { db in
+        try await database.write { db async throws(Database.Error) in
             try await Reminder
                 .where { $0.id == 1 }
                 .update { $0.title = "Groceries Updated" }
                 .execute(db)
         }
 
-        let updatedReminder = try await database.read { db in
+        let updatedReminder = try await database.read { db async throws(Database.Error) in
             try await Reminder
                 .where { $0.id == 1 }
                 .asSelect()
@@ -164,14 +164,14 @@ struct StatementExtensionTestsNew {
         #expect(updatedReminder?.title == "Groceries Updated")
 
         // Test delete
-        try await database.write { db in
+        try await database.write { db async throws(Database.Error) in
             try await ReminderTag
                 .where { $0.reminderID == 1 && $0.tagID == 1 }
                 .delete()
                 .execute(db)
         }
 
-        let tagCount = try await database.read { db in
+        let tagCount = try await database.read { db async throws(Database.Error) in
             try await ReminderTag
                 .where { $0.reminderID == 1 }
                 .asSelect()

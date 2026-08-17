@@ -16,7 +16,7 @@ struct Test {
     @Test
     func `DELETE with WHERE clause`() async throws {
         // Insert test data
-        let inserted = try await db.write { db in
+        let inserted = try await db.write { db async throws(Database.Error) in
             try await Reminder.insert {
                 Reminder.Draft(remindersListID: 1, title: "Delete test \(UUID())")
             }
@@ -27,18 +27,18 @@ struct Test {
         let id = try #require(inserted.first?.id)
 
         // Verify record exists
-        let before = try await db.read { db in
+        let before = try await db.read { db async throws(Database.Error) in
             try await Reminder.where { $0.id == id }.fetchOne(db)
         }
         #expect(before != nil)
 
         // Delete
-        try await db.write { db in
+        try await db.write { db async throws(Database.Error) in
             try await Reminder.where { $0.id == id }.delete().execute(db)
         }
 
         // Verify deleted
-        let after = try await db.read { db in
+        let after = try await db.read { db async throws(Database.Error) in
             try await Reminder.where { $0.id == id }.fetchOne(db)
         }
         #expect(after == nil)
@@ -47,7 +47,7 @@ struct Test {
     @Test
     func `DELETE with RETURNING`() async throws {
         // Insert test data
-        let inserted = try await db.write { db in
+        let inserted = try await db.write { db async throws(Database.Error) in
             try await Reminder.insert {
                 Reminder.Draft(remindersListID: 1, title: "Haircut test")
             }
@@ -58,7 +58,7 @@ struct Test {
         let id = try #require(inserted.first?.id)
 
         // Delete with RETURNING
-        let deleted = try await db.write { db in
+        let deleted = try await db.write { db async throws(Database.Error) in
             try await Reminder
                 .where { $0.id == id }
                 .delete()
@@ -70,7 +70,7 @@ struct Test {
         #expect(deleted?.title == "Haircut test")
 
         // Verify deletion
-        let count = try await db.read { db in
+        let count = try await db.read { db async throws(Database.Error) in
             try await Reminder.where { $0.id == id }.fetchAll(db).count
         }
         #expect(count == 0)
@@ -79,7 +79,7 @@ struct Test {
     @Test
     func `DELETE with complex WHERE`() async throws {
         // Insert test data with specific criteria
-        let inserted = try await db.write { db in
+        let inserted = try await db.write { db async throws(Database.Error) in
             try await Reminder.insert {
                 Reminder.Draft(
                     isCompleted: true,
@@ -95,7 +95,7 @@ struct Test {
         #expect(inserted.count == 1)
 
         // Delete with complex WHERE
-        let deleted = try await db.write { db in
+        let deleted = try await db.write { db async throws(Database.Error) in
             try await Reminder
                 .where {
                     $0.isCompleted && $0.priority == Priority.high
@@ -112,7 +112,7 @@ struct Test {
     @Test
     func `DELETE with no matches`() async throws {
         // Try to delete non-existent record
-        let deleted = try await db.write { db in
+        let deleted = try await db.write { db async throws(Database.Error) in
             try await Reminder
                 .where { $0.id == 999999 }
                 .delete()
@@ -126,7 +126,7 @@ struct Test {
     @Test
     func `DELETE with foreign key (cascades)`() async throws {
         // Insert a new list
-        let insertedList = try await db.write { db in
+        let insertedList = try await db.write { db async throws(Database.Error) in
             try await RemindersList.insert {
                 RemindersList(id: -1, title: "Cascade test list")
             }
@@ -137,7 +137,7 @@ struct Test {
         let listId = try #require(insertedList.first?.id)
 
         // Insert reminders in this list
-        let insertedReminders = try await db.write { db in
+        let insertedReminders = try await db.write { db async throws(Database.Error) in
             try await Reminder.insert {
                 Reminder.Draft(remindersListID: listId, title: "Cascade test 1")
                 Reminder.Draft(remindersListID: listId, title: "Cascade test 2")
@@ -150,18 +150,18 @@ struct Test {
         #expect(insertedReminders.count == 3)
 
         // Delete the list (should cascade to reminders)
-        try await db.write { db in
+        try await db.write { db async throws(Database.Error) in
             try await RemindersList.where { $0.id == listId }.delete().execute(db)
         }
 
         // Verify list is deleted
-        let list = try await db.read { db in
+        let list = try await db.read { db async throws(Database.Error) in
             try await RemindersList.where { $0.id == listId }.fetchOne(db)
         }
         #expect(list == nil)
 
         // Verify reminders are deleted (CASCADE)
-        let remindersAfter = try await db.read { db in
+        let remindersAfter = try await db.read { db async throws(Database.Error) in
             try await Reminder.where { $0.remindersListID == listId }.fetchAll(db)
         }
         #expect(remindersAfter.count == 0)
@@ -171,7 +171,7 @@ struct Test {
     func `DELETE all records`() async throws {
         // Insert test tags with unique titles
         let uniqueSuffix = UUID().uuidString.prefix(8)
-        let inserted = try await db.write { db in
+        let inserted = try await db.write { db async throws(Database.Error) in
             try await Tag.insert {
                 Tag(id: -1, title: "Test1-\(uniqueSuffix)")
                 Tag(id: -2, title: "Test2-\(uniqueSuffix)")
@@ -185,7 +185,7 @@ struct Test {
         #expect(inserted.count == 4)
 
         // Delete all test tags
-        let deleted = try await db.write { db in
+        let deleted = try await db.write { db async throws(Database.Error) in
             try await Tag.where { $0.title.ilike("Test%-\(uniqueSuffix)") }
                 .delete()
                 .returning(\.self)
@@ -195,7 +195,7 @@ struct Test {
         #expect(deleted.count == 4)
 
         // Verify all deleted
-        let remaining = try await db.read { db in
+        let remaining = try await db.read { db async throws(Database.Error) in
             try await Tag.where { $0.title.ilike("Test%-\(uniqueSuffix)") }.fetchAll(db)
         }
         #expect(remaining.count == 0)
@@ -208,7 +208,7 @@ struct Test {
     @Test
     func `DELETE with enum value`() async throws {
         // Insert test data with low priority
-        let inserted = try await db.write { db in
+        let inserted = try await db.write { db async throws(Database.Error) in
             try await Reminder.insert {
                 Reminder.Draft(
                     priority: .low,
@@ -223,7 +223,7 @@ struct Test {
         #expect(inserted.count == 1)
 
         // Delete by enum value
-        let deleted = try await db.write { db in
+        let deleted = try await db.write { db async throws(Database.Error) in
             try await Reminder
                 .where { $0.priority == Priority.low && $0.title == "Low priority delete test" }
                 .delete()
@@ -237,7 +237,7 @@ struct Test {
     @Test
     func `DELETE using find()`() async throws {
         // Insert test data
-        let inserted = try await db.write { db in
+        let inserted = try await db.write { db async throws(Database.Error) in
             try await Reminder.insert {
                 Reminder.Draft(remindersListID: 1, title: "Find delete test")
             }
@@ -248,12 +248,12 @@ struct Test {
         let id = try #require(inserted.first?.id)
 
         // Delete using find()
-        try await db.write { db in
+        try await db.write { db async throws(Database.Error) in
             try await Reminder.find(id).delete().execute(db)
         }
 
         // Verify deleted
-        let reminder = try await db.read { db in
+        let reminder = try await db.read { db async throws(Database.Error) in
             try await Reminder.where { $0.id == id }.fetchOne(db)
         }
 
@@ -263,7 +263,7 @@ struct Test {
     @Test
     func `DELETE using find() with sequence`() async throws {
         // Insert test data
-        let inserted = try await db.write { db in
+        let inserted = try await db.write { db async throws(Database.Error) in
             try await Reminder.insert {
                 Reminder.Draft(remindersListID: 1, title: "Sequence delete 1")
                 Reminder.Draft(remindersListID: 1, title: "Sequence delete 2")
@@ -277,7 +277,7 @@ struct Test {
         let ids = inserted.map(\.id)
 
         // Delete using find() with sequence
-        let deleted = try await db.write { db in
+        let deleted = try await db.write { db async throws(Database.Error) in
             try await Reminder
                 .find(ids)
                 .delete()
@@ -289,7 +289,7 @@ struct Test {
         #expect(Swift.Set(deleted.map(\.id)) == Swift.Set(ids))
 
         // Verify all deleted
-        let remaining = try await db.read { db in
+        let remaining = try await db.read { db async throws(Database.Error) in
             try await Reminder.find(ids).fetchAll(db)
         }
         #expect(remaining.count == 0)

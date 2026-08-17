@@ -15,7 +15,9 @@ extension Table where Self: QueryRepresentable, Self.QueryOutput == Self {
     /// - Parameter db: A database connection.
     /// - Returns: An array of all records in the table.
     @inlinable
-    public static func fetchAll(_ db: any Database.Connection.`Protocol`) async throws -> [Self] {
+    public static func fetchAll(
+        _ db: some Database.Connection.`Protocol`
+    ) async throws(Database.Error) -> [Self] {
         // Use selectStar() to select all columns from the table
         // This matches the pattern used in SharingGRDB
         let query = Self.all.selectStar()
@@ -32,7 +34,9 @@ extension Table where Self: QueryRepresentable, Self.QueryOutput == Self {
     /// - Parameter db: A database connection.
     /// - Returns: The first record in the table, or nil if empty.
     @inlinable
-    public static func fetchOne(_ db: any Database.Connection.`Protocol`) async throws -> Self? {
+    public static func fetchOne(
+        _ db: some Database.Connection.`Protocol`
+    ) async throws(Database.Error) -> Self? {
         // Use selectStar() and limit to 1
         let query = Self.all.selectStar().limit(1)
         return try await query.fetchOne(db)
@@ -48,7 +52,9 @@ extension Table where Self: QueryRepresentable, Self.QueryOutput == Self {
     /// - Parameter db: A database connection.
     /// - Returns: The number of records in the table.
     @inlinable
-    public static func fetchCount(_ db: any Database.Connection.`Protocol`) async throws -> Int {
+    public static func fetchCount(
+        _ db: some Database.Connection.`Protocol`
+    ) async throws(Database.Error) -> Int {
         // Use the existing fetchCount extension on SelectStatement
         try await Self.all.asSelect().fetchCount(db)
     }

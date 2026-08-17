@@ -25,7 +25,7 @@ struct Test {
 
     @Test
     func `Create trigger function using low-level helper`() async throws {
-        try await db.withRollback { db in
+        try await db.withRollback { db async throws(Database.Error) in
             // Use the low-level helper from Database.Connection.Protocol
             try await db.createTriggerFunction(
                 "test_update_timestamp",
@@ -67,7 +67,7 @@ struct Test {
 
     @Test
     func `Trigger function executes on INSERT`() async throws {
-        try await db.withRollback { db in
+        try await db.withRollback { db async throws(Database.Error) in
             // Create function that sets slug from title
             try await db.createTriggerFunction(
                 "set_slug",
@@ -102,7 +102,7 @@ struct Test {
 
     @Test
     func `Trigger function executes on DELETE`() async throws {
-        try await db.withRollback { db in
+        try await db.withRollback { db async throws(Database.Error) in
             // Create audit log table
             try await db.execute(
                 """
@@ -157,7 +157,7 @@ struct Test {
 
     @Test
     func `Multiple triggers execute in order`() async throws {
-        try await db.withRollback { db in
+        try await db.withRollback { db async throws(Database.Error) in
             // Create first trigger (appends '1')
             try await db.createTriggerFunction(
                 "append_one",
@@ -209,7 +209,7 @@ struct Test {
 
     @Test
     func `Trigger can prevent operation by raising exception`() async throws {
-        try await db.withRollback { db in
+        try await db.withRollback { db async throws(Database.Error) in
             // Create function that always fails
             try await db.createTriggerFunction(
                 "always_fail",
@@ -227,7 +227,7 @@ struct Test {
 
             // Use savepoint to handle the failed insert without aborting the entire transaction
             do {
-                try await db.withSavepoint("test_insert") { db in
+                try await db.withSavepoint("test_insert") { db async throws(Database.Error) in
                     try await db.execute(
                         """
                         INSERT INTO posts (title) VALUES ('Should Fail')
@@ -248,7 +248,7 @@ struct Test {
 
     @Test
     func `BEFORE trigger can modify NEW row`() async throws {
-        try await db.withRollback { db in
+        try await db.withRollback { db async throws(Database.Error) in
             // Create function that forces title to uppercase
             try await db.createTriggerFunction(
                 "uppercase_title",
@@ -282,7 +282,7 @@ struct Test {
 
     @Test
     func `DROP FUNCTION with CASCADE removes dependent triggers`() async throws {
-        try await db.withRollback { db in
+        try await db.withRollback { db async throws(Database.Error) in
             // Create function and trigger
             try await db.createTriggerFunction(
                 "test_func",
@@ -339,7 +339,7 @@ private struct Post: Codable, Equatable {
 
 extension Database.TestDatabaseSetupMode {
     static let withTriggerTestTables = Database.TestDatabaseSetupMode { db in
-        try await db.write { conn in
+        try await db.write { conn async throws(Database.Error) in
             // Create posts table with camelCase columns
             try await conn.execute(
                 """
